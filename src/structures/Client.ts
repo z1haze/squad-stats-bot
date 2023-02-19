@@ -2,7 +2,7 @@ import {ApplicationCommandDataResolvable, Client, ClientEvents, Collection, Gate
 import {CommandType} from "../typings/Command";
 import glob from "glob";
 import {promisify} from "util";
-import {RegisterCommandsOptions} from "../typings/client";
+import {RegisterCommandsOptions} from "../typings/Client";
 import {Event} from "./Event";
 
 const globPromise = promisify(glob);
@@ -26,7 +26,7 @@ export class ExtendedClient extends Client {
     async registerCommands({ commands, guildId }: RegisterCommandsOptions) {
         if (guildId) {
             this.guilds.cache.get(guildId)?.commands.set(commands);
-            console.log(`Registering commands to guild ${guildId}`);
+            console.log(`Registered commands for guild ${guildId}`);
         } else {
             this.application?.commands.set(commands);
             console.log('Registering global commands');
@@ -48,7 +48,7 @@ export class ExtendedClient extends Client {
         this.on('ready', async () => {
             await this.registerCommands({
                 commands: slashCommands,
-                guildId: process.env.guildId
+                guildId: process.env.GUILD_ID
             });
         });
 
