@@ -1,21 +1,22 @@
-import {Event} from "../structures/Event";
-import {client} from "../index";
-import {CommandInteractionOptionResolver} from "discord.js";
-import {ExtendedInteraction} from "../typings/Command";
+import {commands} from "../index";
+import {CommandInteraction, Events} from "discord.js";
 
-export default new Event('interactionCreate', async (interaction) => {
-    // Chat Input Commands
-    if (interaction.isCommand()) {
+export default {
+    name: Events.InteractionCreate,
+    execute: async (interaction: CommandInteraction) => {
+        if (!interaction.isChatInputCommand()) return;
+
         await interaction.deferReply();
 
-        const command = client.commands.get(interaction.commandName);
+        const command = commands.get(interaction.commandName);
 
-        if (!command) return interaction.followUp('Invalid command.');
+        if (!command) return interaction.followUp("Invalid Command!");
 
-        command.run({
-            args: interaction.options as CommandInteractionOptionResolver,
-            client,
-            interaction: interaction as ExtendedInteraction
-        });
+        try {
+            await command.execute(interaction);
+        } catch (error) {
+            console.error(`Error executing ${interaction.commandName}`);
+            console.error(error);
+        }
     }
-});
+}
