@@ -24,10 +24,6 @@ export const redis = new Redis({
 export const client = new Client({intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages]});
 export const commands: Collection<string, Command> = new Collection();
 
-client.once(Events.ClientReady, c => {
-    console.log(`Ready! Logged in as ${c.user.tag}`);
-});
-
 (async () => {
     const commandFiles = await globPromise(`${__dirname}/commands/*/*{.ts,.js}`, {windowsPathsNoEscape: true});
 
