@@ -6,7 +6,7 @@ export default {
     execute: async (interaction: CommandInteraction) => {
         if (!interaction.isChatInputCommand()) return;
 
-        await interaction.deferReply();
+        await interaction.deferReply({ephemeral: true});
 
         const command = commands.get(interaction.commandName);
 
