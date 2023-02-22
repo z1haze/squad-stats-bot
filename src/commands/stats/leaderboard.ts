@@ -8,7 +8,7 @@ import {
 } from "discord.js";
 
 import env from "../../util/env";
-import {commands, redis} from "../../index";
+import {redis} from "../../index";
 import {getLeaderboardPlayers} from "../../lib/leaderboard";
 
 export default {
@@ -16,17 +16,15 @@ export default {
         .setName('leaderboard')
         .setDescription('Show the Squad leaderboard'),
     execute: async (interaction: ChatInputCommandInteraction) => {
+        await interaction.deferReply({ephemeral: true});
+
         let page = 1;
 
-        const playerCount = await redis.hlen('players');
-        const pageCount = Math.ceil(playerCount / env.LEADERBOARD_PAGE_SIZE);
-
-        const embed = await getEmbed(page);
-        const row = getButtonRow(page, pageCount);
-
+        const {embed, row} = await getData(page);
 
         // the initial followup message
         const message = await interaction.followUp({
+            ephemeral: true,
             embeds: [embed],
             components: [row],
             fetchReply: true
@@ -44,17 +42,29 @@ export default {
                 page++
             }
 
-            const embed = await getEmbed(page);
-            const row = getButtonRow(page, pageCount);
+            const {embed, row} = await getData(page);
 
             await i.update({embeds: [embed], components: [row]});
         });
     }
 };
 
+async function getData(page: number) {
+    const playerCount = await redis.hlen('players');
+    const pageCount = Math.ceil(playerCount / env.LEADERBOARD_PAGE_SIZE);
+
+    const embed = await getEmbed(page);
+    const row = getButtonRow(page, pageCount);
+
+    return {
+        embed,
+        row
+    }
+}
+
 async function getEmbed(page: number) {
     return new EmbedBuilder()
-        .setColor('#86100b')
+        .setColor('Blurple')
         .setTitle('Top Shooters')
         .addFields(...(await getLeaderboardPlayers(page)));
 }

@@ -1,16 +1,6 @@
 import {redis} from "../index";
 import env from "../util/env";
-
-interface PlayerServer {
-    kills: number;
-    kd: number;
-}
-
-type Player = {
-    steamID: string;
-    playerName: string;
-    servers: PlayerServer[]
-}
+import {Player, PlayerServer} from "../typings/player";
 
 export async function getLeaderboardPlayers(page: number) {
     /**
@@ -41,8 +31,8 @@ export async function getLeaderboardPlayers(page: number) {
                 const player: Player = JSON.parse(result as string);
 
                 namesFieldData.push(`${start + counter + 1}. ${player.playerName}`);
-                killsFieldData.push(player.servers.reduce((acc, curr) => acc + curr.kills, 0));
-                kdFieldData.push(player.servers.reduce((acc, curr) => acc + curr.kd, 0) / player.servers.length);
+                killsFieldData.push(player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.kills, 0));
+                kdFieldData.push(player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.kd, 0) / player.servers.length);
             });
 
             return [
