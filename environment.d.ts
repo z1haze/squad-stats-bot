@@ -6,6 +6,7 @@ declare global {
             ENVIRONMENT: "dev" | "prod" | "debug";
             REDIS_HOST: string;
             REDIS_PORT: string;
+            REDIS_PASS: string;
             EMOJI_DIVIDER: string;
             EMOJI_KILL: string;
             EMOJI_DEATH: string;

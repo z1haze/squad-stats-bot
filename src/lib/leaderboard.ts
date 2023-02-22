@@ -13,6 +13,7 @@ export async function getLeaderboardPlayers(page: number) {
     const stop = start + env.LEADERBOARD_PAGE_SIZE - 1;
 
     const results = await redis.zrevrange('leaderboard:kills', start, stop);
+
     const pipeline = redis.pipeline();
 
     results.forEach((steamId) => pipeline.hget('players', steamId));

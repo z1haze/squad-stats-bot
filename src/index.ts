@@ -18,7 +18,8 @@ const globPromise = promisify(glob);
 
 export const redis = new Redis({
     host: env.REDIS_HOST,
-    port: env.REDIS_PORT
+    port: env.REDIS_PORT,
+    password: env.REDIS_PASS
 });
 
 export const client = new Client({intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages]});

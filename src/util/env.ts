@@ -6,6 +6,7 @@ export default {
     GUILD_ID: process.env.GUILD_ID || '',
     REDIS_HOST: process.env.REDIS_HOST || 'localhost',
     REDIS_PORT: process.env.REDIS_PORT ? parseInt(process.env.REDIS_PORT) : 6379,
+    REDIS_PASS: process.env.REDIS_PASS ?? '',
     LEADERBOARD_PAGE_SIZE: process.env.LEADERBOARD_PAGE_SIZE ? parseInt(process.env.LEADERBOARD_PAGE_SIZE) : 10,
     EMOJI_DIVIDER: process.env.EMOJI_DIVIDER || '-',
     EMOJI_KILL: process.env.EMOJI_KILL || '',
