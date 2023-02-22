@@ -10,6 +10,7 @@ import env from '../../util/env';
 import {redis} from "../../index";
 import {getCaseInsensitivePattern, nth} from "../../util/helpers";
 import {Player, PlayerServer} from "../../typings/player";
+import {getSteamAvatarUrl} from "../../lib/stats";
 
 /**
  * Show an individual player's squad stats
@@ -23,6 +24,7 @@ export default {
                 .setDescription('A player\'s name or their Steam ID')
                 .setAutocomplete(true)
                 .setRequired(true)),
+
     autocomplete: async (interaction: AutocompleteInteraction) => {
         const focusedValue = interaction.options.getFocused();
 
@@ -53,22 +55,22 @@ export default {
 
         return interaction.respond(suggestions);
     },
+
     execute: async (interaction: ChatInputCommandInteraction) => {
         await interaction.deferReply();
 
         let target = interaction.options.getString('target')!;
 
-        if (
-            target.length !== 17
-            && isNaN(parseInt(target))
-        ) {
+        const targetResult = await redis.hget('players', target);
+
+        if (!targetResult) {
             return interaction.followUp({
                 ephemeral: true,
-                content: 'Invalid target. Player not found.'
+                content: `No player found matching ${target}.`
             });
         }
 
-        const player: Player = JSON.parse((await redis.hget('players', target) as string));
+        const player: Player = JSON.parse(targetResult);
 
         const embed = new EmbedBuilder()
             .setColor('Blurple')
@@ -85,16 +87,12 @@ export default {
             {name: 'Stats', value: `${env.EMOJI_KILL} **KILLS:** ${player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.kills, 0)}\n${env.EMOJI_DEATH} **DEATHS:** ${player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.deaths, 0)}\n${env.EMOJI_KD} **K/D:** ${player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.kd, 0) / player.servers.length}\n${env.EMOJI_REVIVE} **REVIVES:** ${player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.revives, 0)}\n${env.EMOJI_TK} **TKS:** ${player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.tks, 0)}`}
         )
 
-        try {
-            await fetch(`https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=${env.STEAM_API_KEY}&steamids=${player.steamID}`)
-                .then((res) => res.json())
-                .then(({response: {players: [steamUser]}}) => embed.setThumbnail(steamUser.avatarmedium));
-        } catch (e) {
-            console.error('Failed to add player avatar');
-            console.error(e);
+        const steamAvatarUrl = await getSteamAvatarUrl(player.steamID);
+
+        if (steamAvatarUrl) {
+            embed.setThumbnail(steamAvatarUrl)
         }
-
-
+        
         const lastUpdate = await redis.get('lastUpdate')!;
 
         if (lastUpdate) {
