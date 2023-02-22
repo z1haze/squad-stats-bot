@@ -12,7 +12,7 @@ import {
 import glob from "glob";
 import {promisify} from "util";
 import {importFile} from "./util/helpers";
-import {Command} from './typings/command'
+import {Command} from './typings/commands'
 
 const globPromise = promisify(glob);
 
