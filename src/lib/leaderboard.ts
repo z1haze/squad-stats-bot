@@ -2,6 +2,11 @@ import {redis} from "../index";
 import env from "../util/env";
 import {Player, PlayerServer} from "../typings/player";
 
+/**
+ * get the field data for a leaderboard page
+ *
+ * @param page
+ */
 export async function getLeaderboardPlayers(page: number) {
     /**
      * if page is 1, start/stop should be 0,9
@@ -20,26 +25,26 @@ export async function getLeaderboardPlayers(page: number) {
 
     return pipeline.exec()
         .then(results => {
-            if (!results) return null;
-
             const namesFieldData: string[] = [];
             const killsFieldData: number[] = [];
             const kdFieldData: number[] = [];
 
-            results.forEach(([err, result], counter) => {
-                if (err) return null;
+            if (results) {
+                results.forEach(([err, result], counter) => {
+                    if (err) return null;
 
-                const player: Player = JSON.parse(result as string);
+                    const player: Player = JSON.parse(result as string);
 
-                namesFieldData.push(`${start + counter + 1}. ${player.playerName}`);
-                killsFieldData.push(player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.kills, 0));
-                kdFieldData.push(player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.kd, 0) / player.servers.length);
-            });
+                    namesFieldData.push(`${start + counter + 1}. ${player.playerName}`);
+                    killsFieldData.push(player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.kills, 0));
+                    kdFieldData.push(player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.kd, 0) / player.servers.length);
+                });
+            }
 
-            return [
-                {name: 'Player:', value: namesFieldData.join('\n'), inline: true},
-                {name: 'Kills:', value: killsFieldData.join('\n'), inline: true},
-                {name: 'K/D:', value: kdFieldData.join('\n'), inline: true}
-            ];
+            return {
+                namesFieldData,
+                killsFieldData,
+                kdFieldData
+            }
         });
 }

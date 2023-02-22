@@ -8,7 +8,7 @@ import {
 
 import env from '../../util/env';
 import {redis} from "../../index";
-import {getCaseInsensitivePattern, nth} from "../../util/helpers";
+import {getCaseInsensitiveGlobPattern, nth} from "../../util/helpers";
 import {Player, PlayerServer} from "../../typings/player";
 import {getSteamAvatarUrl} from "../../lib/stats";
 
@@ -34,7 +34,7 @@ export default {
 
         const suggestions: ApplicationCommandOptionChoiceData[] = await new Promise(resolve => {
             const suggestions: ApplicationCommandOptionChoiceData[] = [];
-            const pattern = getCaseInsensitivePattern(focusedValue);
+            const pattern = getCaseInsensitiveGlobPattern(focusedValue);
 
             const stream = redis.hscanStream("steamusers", {
                 match: `*${pattern}*`,
@@ -92,7 +92,7 @@ export default {
         if (steamAvatarUrl) {
             embed.setThumbnail(steamAvatarUrl)
         }
-        
+
         const lastUpdate = await redis.get('lastUpdate')!;
 
         if (lastUpdate) {

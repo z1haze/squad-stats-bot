@@ -1,8 +1,18 @@
+/**
+ * Dynamically import a file from a file path
+ *
+ * @param filePath
+ */
 export async function importFile(filePath: string) {
     return (await import(filePath))?.default;
 }
 
-export function getCaseInsensitivePattern(str: string) {
+/**
+ * Convert a string to a case-insensitive glob pattern
+ * 
+ * @param str
+ */
+export function getCaseInsensitiveGlobPattern(str: string) {
     const escapes = ['[', ']', '*'];
 
     return str.split('').map(c => {
@@ -18,13 +28,18 @@ export function getCaseInsensitivePattern(str: string) {
     }).join('');
 }
 
+/**
+ * Given a number, provide the correct string suffix
+ *
+ * @param d
+ */
 export function nth(d: number) {
     if (d > 3 && d < 21) return 'th';
 
     switch (d % 10) {
-        case 1:  return "st";
-        case 2:  return "nd";
-        case 3:  return "rd";
-        default: return "th";
+        case 1:  return 'st';
+        case 2:  return 'nd';
+        case 3:  return 'rd';
+        default: return 'th';
     }
 }

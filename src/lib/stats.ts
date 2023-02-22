@@ -1,5 +1,10 @@
 import env from "../util/env";
 
+/**
+ * Get a Steam user's avatar url
+ *
+ * @param steamId
+ */
 export async function getSteamAvatarUrl (steamId: string) {
     if (!env.STEAM_API_KEY) return null;
 

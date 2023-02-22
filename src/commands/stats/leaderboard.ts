@@ -15,6 +15,7 @@ export default {
     data: new SlashCommandBuilder()
         .setName('leaderboard')
         .setDescription('Show the Squad leaderboard'),
+
     execute: async (interaction: ChatInputCommandInteraction) => {
         await interaction.deferReply({ephemeral: true});
 
@@ -49,6 +50,11 @@ export default {
     }
 };
 
+/**
+ * Helper function to get embed page data
+ *
+ * @param page
+ */
 async function getData(page: number) {
     const playerCount = await redis.hlen('players');
     const pageCount = Math.ceil(playerCount / env.LEADERBOARD_PAGE_SIZE);
@@ -62,13 +68,33 @@ async function getData(page: number) {
     }
 }
 
+/**
+ * Create a leaderboard page embed
+ *
+ * @param page
+ */
 async function getEmbed(page: number) {
-    return new EmbedBuilder()
+    const embed = new EmbedBuilder()
         .setColor('Blurple')
-        .setTitle('Top Shooters')
-        .addFields(...(await getLeaderboardPlayers(page)));
+        .setTitle('Top Shooters');
+
+    const {namesFieldData, killsFieldData, kdFieldData} = await getLeaderboardPlayers(page);
+
+    embed.addFields(
+        {name: 'Player:', value: namesFieldData.join('\n'), inline: true},
+        {name: 'Kills:', value: killsFieldData.join('\n'), inline: true},
+        {name: 'K/D:', value: kdFieldData.join('\n'), inline: true}
+    );
+
+    return embed;
 }
 
+/**
+ * Create a button row for a leaderboard page embed
+ *
+ * @param page
+ * @param pageCount
+ */
 function getButtonRow(page: number, pageCount: number) {
     return new ActionRowBuilder<ButtonBuilder>()
         .addComponents(
