@@ -68,8 +68,6 @@ export default {
             });
         }
 
-        console.log(target);
-
         const player: Player = JSON.parse((await redis.hget('players', target) as string));
 
         const embed = new EmbedBuilder()
