@@ -81,10 +81,10 @@ export default {
         const killsRank = (await redis.zrevrank('leaderboard:kills', player.steamID) as number) + 1;
         const revivesRank = (await redis.zrevrank('leaderboard:revives', player.steamID) as number) + 1;
 
-        embed.setDescription(`${player.playerName} is ranked **${killsRank.toLocaleString('en-US')}${nth(killsRank)}** in kills and **${revivesRank.toLocaleString('en-US')}${nth(revivesRank)}** in revives out of **${playerCount.toLocaleString('en-US')}** players.`);
+        embed.setDescription(`${player.playerName} is ranked **${killsRank.toLocaleString('en-US')}${nth(killsRank)}** in kills and\n**${revivesRank.toLocaleString('en-US')}${nth(revivesRank)}** in revives out of **${playerCount.toLocaleString('en-US')}** players.`);
 
         embed.addFields(
-            {name: 'Stats', value: `**KILLS:** ${player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.kills, 0)}\n**DEATHS:** ${player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.deaths, 0)}\n**K/D:** ${player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.kd, 0) / player.servers.length}\n**TKS:** ${player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.tks, 0)}`}
+            {name: 'Stats', value: `${env.EMOJI_KILL} **KILLS:** ${player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.kills, 0)}\n${env.EMOJI_DEATH} **DEATHS:** ${player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.deaths, 0)}\n${env.EMOJI_KD} **K/D:** ${player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.kd, 0) / player.servers.length}\n${env.EMOJI_REVIVE} **REVIVES:** ${player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.revives, 0)}\n${env.EMOJI_TK} **TKS:** ${player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.tks, 0)}`}
         )
 
         try {
