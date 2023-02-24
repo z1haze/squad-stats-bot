@@ -3,17 +3,21 @@
  */
 export interface PlayerServer {
     kills: number;
+    downs: number;
     deaths: number;
     tks: number;
-    kd: number;
+    kdr: number;
     revives: number;
+    rating: number;
 }
 
 /**
  * A player entity type
  */
 export type Player = {
-    steamID: string;
-    playerName: string;
+    steamId: string;
+    name: string;
     servers: PlayerServer[]
 }
+
+export type LeaderboardType = "rating"|"kills"|"revives";

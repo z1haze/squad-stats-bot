@@ -36,7 +36,7 @@ export default {
             const suggestions: ApplicationCommandOptionChoiceData[] = [];
             const pattern = getCaseInsensitiveGlobPattern(focusedValue);
 
-            const stream = redis.hscanStream("steamusers", {
+            const stream = redis.hscanStream("players", {
                 match: `*${pattern}*`,
             });
 
@@ -61,7 +61,7 @@ export default {
 
         let target = interaction.options.getString('target')!;
 
-        const targetResult = await redis.hget('players', target);
+        const targetResult = await redis.hget('stats', target);
 
         if (!targetResult) {
             return interaction.followUp({
@@ -74,20 +74,25 @@ export default {
 
         const embed = new EmbedBuilder()
             .setColor('Blurple')
-            .setTitle(`${player.playerName}'s stats`)
+            .setTitle(`${player.name}'s stats`)
             .setURL(`https://steamcommunity.com/profiles/${target}`);
 
-        const playerCount = await redis.hlen('steamusers') as number;
-        const killsRank = (await redis.zrevrank('leaderboard:kills', player.steamID) as number) + 1;
-        const revivesRank = (await redis.zrevrank('leaderboard:revives', player.steamID) as number) + 1;
+        const playerCount = await redis.hlen('players') as number;
+        const killsRank = (await redis.zrevrank('leaderboard:kills', player.steamId) as number) + 1;
+        const revivesRank = (await redis.zrevrank('leaderboard:revives', player.steamId) as number) + 1;
 
-        embed.setDescription(`${player.playerName} is ranked **${killsRank.toLocaleString('en-US')}${nth(killsRank)}** in kills and\n**${revivesRank.toLocaleString('en-US')}${nth(revivesRank)}** in revives out of **${playerCount.toLocaleString('en-US')}** players.`);
+        embed.setDescription(`${player.name} is ranked **${killsRank.toLocaleString('en-US')}${nth(killsRank)}** in kills and\n**${revivesRank.toLocaleString('en-US')}${nth(revivesRank)}** in revives out of **${playerCount.toLocaleString('en-US')}** players.`);
 
-        embed.addFields(
-            {name: 'Stats', value: `${env.EMOJI_KILL} **KILLS:** ${player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.kills, 0)}\n${env.EMOJI_DEATH} **DEATHS:** ${player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.deaths, 0)}\n${env.EMOJI_KD} **K/D:** ${player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.kd, 0) / player.servers.length}\n${env.EMOJI_REVIVE} **REVIVES:** ${player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.revives, 0)}\n${env.EMOJI_TK} **TKS:** ${player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.tks, 0)}`}
-        )
+        let fieldValue = `${env.EMOJI_KILL} **KILLS:** ${player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.kills, 0)}\n`;
+        fieldValue += `${env.EMOJI_DOWN} **DOWNS:** ${player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.downs, 0)}\n`;
+        fieldValue += `${env.EMOJI_DEATH} **DEATHS:** ${player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.deaths, 0)}\n`;
+        fieldValue += `${env.EMOJI_KD} **K/D:** ${(player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.kdr, 0) / player.servers.length).toFixed(1)}\n`;
+        fieldValue += `${env.EMOJI_REVIVE} **REVIVES:** ${player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.revives, 0)}\n`;
+        fieldValue += `${env.EMOJI_TK} **TKS:** ${player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.tks, 0)}`;
 
-        const steamAvatarUrl = await getSteamAvatarUrl(player.steamID);
+        embed.addFields({name: 'Stats', value: fieldValue});
+
+        const steamAvatarUrl = await getSteamAvatarUrl(player.steamId);
 
         if (steamAvatarUrl) {
             embed.setThumbnail(steamAvatarUrl)

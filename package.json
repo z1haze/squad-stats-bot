@@ -2,7 +2,7 @@
   "name": "tt-squad-bot",
   "version": "1.0.0",
   "description": "A Discord bot to handle TT related tasks",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
     "start": "ts-node src/index.ts",
     "start:dev": "ts-node-dev src/index.ts",

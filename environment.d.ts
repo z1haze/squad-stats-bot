@@ -3,12 +3,12 @@ declare global {
         interface ProcessEnv {
             BOT_TOKEN: string;
             GUILD_ID: string;
-            ENVIRONMENT: "dev" | "prod" | "debug";
             REDIS_HOST: string;
             REDIS_PORT: string;
             REDIS_PASS: string;
             EMOJI_DIVIDER: string;
             EMOJI_KILL: string;
+            EMOJI_DOWN: string;
             EMOJI_DEATH: string;
             EMOJI_REVIVE: string;
             EMOJI_TK: string;

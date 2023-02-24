@@ -1,13 +1,14 @@
 import {redis} from "../index";
 import env from "../util/env";
-import {Player, PlayerServer} from "../typings/player";
+import {LeaderboardType, Player, PlayerServer} from "../typings/player";
 
 /**
  * get the field data for a leaderboard page
  *
  * @param page
+ * @param type
  */
-export async function getLeaderboardPlayers(page: number) {
+export async function getLeaderboardPlayers(page: number, type: LeaderboardType) {
     /**
      * if page is 1, start/stop should be 0,9
      * if page is 2, start/stop should be 10,19
@@ -17,17 +18,16 @@ export async function getLeaderboardPlayers(page: number) {
     const start = page * env.LEADERBOARD_PAGE_SIZE - env.LEADERBOARD_PAGE_SIZE;
     const stop = start + env.LEADERBOARD_PAGE_SIZE - 1;
 
-    const results = await redis.zrevrange('leaderboard:kills', start, stop);
+    const results = await redis.zrevrange(`leaderboard:${type}`, start, stop);
 
     const pipeline = redis.pipeline();
 
-    results.forEach((steamId) => pipeline.hget('players', steamId));
+    results.forEach((steamId) => pipeline.hget('stats', steamId));
 
     return pipeline.exec()
         .then(results => {
             const namesFieldData: string[] = [];
-            const killsFieldData: number[] = [];
-            const kdFieldData: number[] = [];
+            const scoreFieldData: string[] = [];
 
             if (results) {
                 results.forEach(([err, result], counter) => {
@@ -35,16 +35,14 @@ export async function getLeaderboardPlayers(page: number) {
 
                     const player: Player = JSON.parse(result as string);
 
-                    namesFieldData.push(`${start + counter + 1}. ${player.playerName}`);
-                    killsFieldData.push(player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.kills, 0));
-                    kdFieldData.push(player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.kd, 0) / player.servers.length);
+                    namesFieldData.push(`${start + counter + 1}. ${player.name}`);
+                    scoreFieldData.push((player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr[type], 0) / player.servers.length).toFixed(type === 'rating' ? 1 : 0));
                 });
             }
 
             return {
                 namesFieldData,
-                killsFieldData,
-                kdFieldData
+                scoreFieldData
             }
         });
 }
