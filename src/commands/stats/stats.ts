@@ -46,7 +46,9 @@ export default {
                 }
 
                 if (suggestions.length > 4) {
+                    stream.pause();
                     resolve(suggestions);
+                    return;
                 }
             });
 
