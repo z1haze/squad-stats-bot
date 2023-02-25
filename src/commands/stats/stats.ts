@@ -77,11 +77,15 @@ export default {
             .setTitle(`${player.name}'s stats`)
             .setURL(`https://steamcommunity.com/profiles/${target}`);
 
-        const playerCount = await redis.hlen('players') as number;
+        const overallRank = (await redis.zrevrank('leaderboard:rating', player.steamId) as number) + 1;
         const killsRank = (await redis.zrevrank('leaderboard:kills', player.steamId) as number) + 1;
         const revivesRank = (await redis.zrevrank('leaderboard:revives', player.steamId) as number) + 1;
 
-        embed.setDescription(`${player.name} is ranked **${killsRank.toLocaleString('en-US')}${nth(killsRank)}** in kills and\n**${revivesRank.toLocaleString('en-US')}${nth(revivesRank)}** in revives out of **${playerCount.toLocaleString('en-US')}** players.`);
+        let description = `${player.name} is ranked **${overallRank.toLocaleString('en-US')}${nth(overallRank)}** overall.`
+
+        description += `\nThey are ranked **${killsRank.toLocaleString('en-US')}${nth(killsRank)}** in kills and **${revivesRank.toLocaleString('en-US')}${nth(revivesRank)}** in revives.`;
+
+        embed.setDescription(description);
 
         let fieldValue = `${env.EMOJI_KILL} **KILLS:** ${player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.kills, 0)}\n`;
         fieldValue += `${env.EMOJI_DOWN} **DOWNS:** ${player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.downs, 0)}\n`;
