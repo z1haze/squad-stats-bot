@@ -55,7 +55,12 @@ export default {
             stream.on('end', () => resolve(suggestions));
         });
 
-        return interaction.respond(suggestions);
+        try {
+            await interaction.respond(suggestions);
+        } catch (error: any) {
+            console.error(error.message);
+            console.log(JSON.stringify(suggestions));
+        }
     },
 
     execute: async (interaction: ChatInputCommandInteraction) => {
@@ -83,7 +88,7 @@ export default {
         const killsRank = (await redis.zrevrank('leaderboard:kills', player.steamId) as number) + 1;
         const revivesRank = (await redis.zrevrank('leaderboard:revives', player.steamId) as number) + 1;
 
-        let description = `${player.name} is ranked **${overallRank.toLocaleString('en-US')}${nth(overallRank)}** overall.`
+        let description = `${player.name} is ranked **${overallRank.toLocaleString('en-US')}${nth(overallRank)}** overall.`;
 
         description += `\nThey are ranked **${killsRank.toLocaleString('en-US')}${nth(killsRank)}** in kills and **${revivesRank.toLocaleString('en-US')}${nth(revivesRank)}** in revives.`;
 
@@ -101,7 +106,7 @@ export default {
         const steamAvatarUrl = await getSteamAvatarUrl(player.steamId);
 
         if (steamAvatarUrl) {
-            embed.setThumbnail(steamAvatarUrl)
+            embed.setThumbnail(steamAvatarUrl);
         }
 
         const lastUpdate = await redis.get('lastUpdate')!;
