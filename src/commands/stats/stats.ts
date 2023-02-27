@@ -23,7 +23,14 @@ export default {
             option.setName('target')
                 .setDescription('A player\'s name or their Steam ID')
                 .setAutocomplete(true)
-                .setRequired(true)),
+                .setRequired(true))
+        .addStringOption(option =>
+            option.setName('visibility')
+                .setDescription('If set to to private, response will be sent only to the command sender')
+                .addChoices(
+                    {name: 'Public', value: 'public'},
+                    {name: 'Private', value: 'private'}
+                )),
 
     autocomplete: async (interaction: AutocompleteInteraction) => {
         const focusedValue = interaction.options.getFocused();
@@ -64,7 +71,9 @@ export default {
     },
 
     execute: async (interaction: ChatInputCommandInteraction) => {
-        await interaction.deferReply();
+        await interaction.deferReply({
+            ephemeral: interaction.options.getString('visibility') === 'private'
+        });
 
         let target = interaction.options.getString('target')!;
 
