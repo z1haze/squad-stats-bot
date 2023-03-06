@@ -4,5 +4,5 @@ export default {
     data: new SlashCommandBuilder()
         .setName('ping')
         .setDescription('Replies with Pong!'),
-    execute: (interaction: ChatInputCommandInteraction) => interaction.followUp('Pong'!)
+    execute: (interaction: ChatInputCommandInteraction) => interaction.reply('Pong'!)
 }
