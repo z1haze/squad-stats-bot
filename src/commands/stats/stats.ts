@@ -125,7 +125,7 @@ export default {
         },
         {
           name: " ",
-          value: `${env.EMOJI_FALL} **Downed**: \`${player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.falls, 0).toLocaleString()}\` (${fallsRank.toLocaleString()}${nth(fallsRank)})\n${env.EMOJI_DEATH} **Deaths**: \`${player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.deaths, 0).toLocaleString()}\` (${deathsRank.toLocaleString()})\n${env.EMOJI_TK} **Teamkills**: \`${player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.tks, 0).toLocaleString()}\` (${tksRank.toLocaleString()}${nth(tksRank)})`
+          value: `${env.EMOJI_FALL} **Downed**: \`${player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.falls, 0).toLocaleString()}\` (${fallsRank.toLocaleString()}${nth(fallsRank)})\n${env.EMOJI_DEATH} **Deaths**: \`${player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.deaths, 0).toLocaleString()}\` (${deathsRank.toLocaleString()}${nth(deathsRank)})\n${env.EMOJI_TK} **Teamkills**: \`${player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.tks, 0).toLocaleString()}\` (${tksRank.toLocaleString()}${nth(tksRank)})`
         }
       );
 
