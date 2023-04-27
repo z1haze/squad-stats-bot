@@ -111,7 +111,7 @@ export default {
         },
         {
           name: " ",
-          value: `${env.EMOJI_KILL} **Kills**: \`${player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.kills, 0).toLocaleString()}\`  (${killsRank.toLocaleString()})\n${env.EMOJI_DOWN} **Downs**: \`${player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.downs, 0).toLocaleString()}\` (${downsRank.toLocaleString()}${nth(downsRank)})`,
+          value: `${env.EMOJI_KILL} **Kills**: \`${player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.kills, 0).toLocaleString()}\`  (${killsRank.toLocaleString()}${nth(killsRank)})\n${env.EMOJI_DOWN} **Downs**: \`${player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.downs, 0).toLocaleString()}\` (${downsRank.toLocaleString()}${nth(downsRank)})`,
           inline: true
         },
         {
