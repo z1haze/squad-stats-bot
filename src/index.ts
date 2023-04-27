@@ -9,12 +9,9 @@ import {
   GatewayIntentBits
 } from "discord.js";
 
-import glob from "glob";
-import {promisify} from "util";
+import {glob} from 'glob';
 import {importFile} from "./util/helpers";
 import {Command} from './typings/commands'
-
-const globPromise = promisify(glob);
 
 export const redis = new Redis({
   host: env.REDIS_HOST,
@@ -26,7 +23,7 @@ export const client = new Client({intents: [GatewayIntentBits.Guilds, GatewayInt
 export const commands: Collection<string, Command> = new Collection();
 
 (async () => {
-  const commandFiles = await globPromise(`${__dirname}/commands/*/*{.ts,.js}`, {windowsPathsNoEscape: true});
+  const commandFiles = await glob(`${__dirname}/commands/*/*{.ts,.js}`, {windowsPathsNoEscape: true});
 
   const slashCommands: ApplicationCommandDataResolvable[] = await Promise.all(
     commandFiles.map(async (filePath) => {
@@ -40,7 +37,7 @@ export const commands: Collection<string, Command> = new Collection();
     })
   );
 
-  const eventFiles = await globPromise(`${__dirname}/events/*{.ts,.js}`, {windowsPathsNoEscape: true});
+  const eventFiles = await glob(`${__dirname}/events/*{.ts,.js}`, {windowsPathsNoEscape: true});
 
   eventFiles.map(async (filePath) => {
     const event = await importFile(filePath);
