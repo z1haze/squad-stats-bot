@@ -4,7 +4,7 @@ import {AutocompleteInteraction, ChatInputCommandInteraction, SlashCommandBuilde
  * The type that wraps our command files
  */
 export type Command = {
-    data: SlashCommandBuilder;
-    execute: (a: ChatInputCommandInteraction) => any,
-    autocomplete?: (a: AutocompleteInteraction) => any
+  data: SlashCommandBuilder;
+  execute: (a: ChatInputCommandInteraction) => any,
+  autocomplete?: (a: AutocompleteInteraction) => any
 }
