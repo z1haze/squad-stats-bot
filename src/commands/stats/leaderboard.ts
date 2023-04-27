@@ -12,7 +12,7 @@ import {redis} from "../../index";
 import {getLeaderBoardData} from "../../lib/leaderboard";
 import {LeaderboardType} from "../../typings/player";
 
-const config = require('../../config.json');
+import * as config from '../../config.json';
 
 export default {
   data: new SlashCommandBuilder()
@@ -83,7 +83,7 @@ export default {
  */
 function getLeaderboardTitle(type: LeaderboardType) {
   if (type in config.leaderboardTitleMap) {
-    return config.leaderboardTitleMap[type];
+    return config.leaderboardTitleMap[type as keyof typeof config.leaderboardTitleMap];
   }
 
   return `Top ${type.charAt(0).toUpperCase() + type.slice(1)}`;
