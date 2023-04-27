@@ -10,7 +10,6 @@ What It Does
 
 - [x] Display leaderboard stats from the squad server in a paginated list
 - [x] Show individual player stats from the squad server
-- [ ] Allow execution of in-game voting from discord
 
 Usage Overview
 ---

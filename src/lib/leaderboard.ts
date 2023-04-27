@@ -9,7 +9,7 @@ import {truncate} from "../util/helpers";
  * @param page
  * @param type
  */
-export async function getLeaderboardPlayers(page: number, type: LeaderboardType) {
+export async function getLeaderBoardData(page: number, type: LeaderboardType) {
   /**
    * if page is 1, start/stop should be 0,9
    * if page is 2, start/stop should be 10,19

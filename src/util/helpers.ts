@@ -1,4 +1,5 @@
 import {LeaderboardType} from "../typings/player";
+import env from "./env";
 
 /**
  * Dynamically import a file from a file path
@@ -52,4 +53,15 @@ export function nth(d: number) {
 
 export function truncate(str: string, length: number, end = '...') {
   return str.length > length ? str.substring(0, length - end.length) + end : str;
+}
+
+export function generateStatsField(emoji: string, title: string, value: string, rank: number) {
+  let content = `${emoji} **${title}**: \`${value}\``;
+
+  if (rank !== null) {
+    rank++;
+    content += ` (${rank.toLocaleString()}${nth(rank)})`;
+  }
+
+  return content;
 }

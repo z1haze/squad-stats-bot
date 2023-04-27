@@ -1,0 +1,12 @@
+{
+  "leaderboardTitleMap": {
+    "rating": "Top Rated Players",
+    "kills": "Top Shooters",
+    "downs": "Top Incapacitators",
+    "revives": "Top Healers",
+    "tks": "Top Blue Falcons",
+    "matchCount": "Most Addicted",
+    "kdr": "Top Kill/Death Ratio",
+    "deaths": "Top Bullet Sponges"
+  }
+}

@@ -8,9 +8,16 @@ import {
 
 import env from '../../util/env';
 import {redis} from "../../index";
-import {getCaseInsensitiveGlobPattern, nth} from "../../util/helpers";
+import {getCaseInsensitiveGlobPattern, nth, generateStatsField} from "../../util/helpers";
 import {Player, PlayerServer} from "../../typings/player";
 import {getSteamAvatarUrl} from "../../lib/stats";
+
+const lookupCache = new Map<string, ApplicationCommandOptionChoiceData[]>();
+
+// clear the cache every hour
+setInterval(() => {
+  lookupCache.clear();
+}, 1000 * 60 * 60);
 
 /**
  * Show an individual player's squad stats
@@ -40,6 +47,12 @@ export default {
     }
 
     const suggestions: ApplicationCommandOptionChoiceData[] = await new Promise(resolve => {
+      // if the cache already has results for this search string, return them
+      if (lookupCache.has(focusedValue)) {
+        resolve(lookupCache.get(focusedValue)!);
+        return;
+      }
+
       const suggestions: ApplicationCommandOptionChoiceData[] = [];
       const pattern = getCaseInsensitiveGlobPattern(focusedValue);
 
@@ -54,12 +67,18 @@ export default {
 
         if (suggestions.length > 4) {
           stream.pause();
+          lookupCache.set(focusedValue, suggestions);
           resolve(suggestions);
-          return;
         }
       });
 
-      stream.on('end', () => resolve(suggestions));
+      stream.on('end', () => {
+        if (suggestions.length > 0) {
+          lookupCache.set(focusedValue, suggestions);
+        }
+
+        resolve(suggestions);
+      });
     });
 
     try {
@@ -87,97 +106,102 @@ export default {
     }
 
     const player: Player = JSON.parse(targetResult);
+    const pipeline = redis.pipeline();
 
-    let killsRank = (await redis.zrevrank('leaderboard:kills', player.steamId) as number);
-    let downsRank = (await redis.zrevrank('leaderboard:downs', player.steamId) as number);
-    let fallsRank = (await redis.zrevrank('leaderboard:falls', player.steamId) as number);
-    let deathsRank = (await redis.zrevrank('leaderboard:deaths', player.steamId) as number);
-    let revivesRank = (await redis.zrevrank('leaderboard:revives', player.steamId) as number);
-    let tksRank = (await redis.zrevrank('leaderboard:tks', player.steamId) as number);
-    let overallRank = (await redis.zrevrank('leaderboard:rating', player.steamId) as number);
-    let kdRank = (await redis.zrevrank('leaderboard:kdr', player.steamId) as number);
-    let idRank = (await redis.zrevrank('leaderboard:idr', player.steamId) as number);
-    let matchCountRank = (await redis.zrevrank('leaderboard:matchCount', player.steamId) as number);
+    pipeline.zrevrank('leaderboard:kills', player.steamId);
+    pipeline.zrevrank('leaderboard:downs', player.steamId);
+    pipeline.zrevrank('leaderboard:falls', player.steamId);
+    pipeline.zrevrank('leaderboard:deaths', player.steamId);
+    pipeline.zrevrank('leaderboard:revives', player.steamId);
+    pipeline.zrevrank('leaderboard:tks', player.steamId);
+    pipeline.zrevrank('leaderboard:rating', player.steamId);
+    pipeline.zrevrank('leaderboard:kdr', player.steamId);
+    pipeline.zrevrank('leaderboard:idr', player.steamId);
+    pipeline.zrevrank('leaderboard:matchCount', player.steamId);
 
-    let overallFieldValue = `${env.EMOJI_RATING} **Overall Rating**: `;
-    overallFieldValue += `\`${(player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.rating, 0) / player.servers.length).toFixed(0)}\``;
+    let [
+      killsRank,
+      downsRank,
+      fallsRank,
+      deathsRank,
+      revivesRank,
+      tksRank,
+      overallRank,
+      kdRank,
+      idRank,
+      matchCountRank
+    ] = (await pipeline.exec())
+      ?.map((result) => result[1] as number)!;
 
-    if (overallRank !== null) {
-      overallRank++;
-      overallFieldValue += ` (${overallRank.toLocaleString()}${nth(overallRank)})`;
-    }
+    const overallFieldValue = generateStatsField(
+      env.EMOJI_RATING,
+      'Overall Rating',
+      (player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.rating, 0) / player.servers.length).toFixed(0),
+      overallRank
+    );
 
-    let matchesFieldValue = `${env.EMOJI_MATCHES} **Games Played**: `;
-    matchesFieldValue += `\`${player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.matchCount, 0).toLocaleString()}\``;
+    const matchesFieldValue = generateStatsField(
+      env.EMOJI_MATCHES,
+      'Games Played',
+      player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.matchCount, 0).toLocaleString(),
+      matchCountRank
+    );
 
-    if (matchCountRank !== null) {
-      matchCountRank++;
-      matchesFieldValue += ` (${matchCountRank.toLocaleString()}${nth(matchCountRank)})`;
-    }
+    const killsFieldValue = generateStatsField(
+      env.EMOJI_KILL,
+      'Kills',
+      player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.kills, 0).toLocaleString(),
+      killsRank
+    );
 
-    let killsFieldValue = `${env.EMOJI_KILL} **Kills**: `;
-    killsFieldValue += `\`${player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.kills, 0).toLocaleString()}\``;
+    const downsFieldValue = generateStatsField(
+      env.EMOJI_DOWN,
+      'Downs',
+      player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.downs, 0).toLocaleString(),
+      downsRank
+    );
 
-    if (killsRank !== null) {
-      killsRank++;
-      killsFieldValue += ` (${killsRank.toLocaleString()}${nth(killsRank)})`;
-    }
+    const kdFieldValue = generateStatsField(
+      env.EMOJI_KD,
+      'K/D',
+      (player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.kdr, 0) / player.servers.length).toFixed(1),
+      kdRank
+    );
 
-    let downsFieldValue = `${env.EMOJI_DOWN} **Downs**: `;
-    downsFieldValue += `\`${player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.downs, 0).toLocaleString()}\``;
+    const idFieldValue = generateStatsField(
+      env.EMOJI_ID,
+      'I/D',
+      (player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.idr, 0) / player.servers.length).toFixed(1),
+      idRank
+    );
 
-    if (downsRank !== null) {
-      downsRank++;
-      downsFieldValue += ` (${downsRank.toLocaleString()}${nth(downsRank)})`;
-    }
+    const revivesFieldValue = generateStatsField(
+      env.EMOJI_REVIVE,
+      'Revives',
+      player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.revives, 0).toLocaleString(),
+      revivesRank
+    );
 
-    let kdFieldValue = `${env.EMOJI_KD} **K/D**: `;
-    kdFieldValue += `\`${(player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.kdr, 0) / player.servers.length).toFixed(1)}\``;
+    const fallsFieldValue = generateStatsField(
+      env.EMOJI_FALL,
+      'Falls',
+      player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.falls, 0).toLocaleString(),
+      fallsRank
+    );
 
-    if (kdRank !== null) {
-      kdRank++;
-      kdFieldValue += ` (${kdRank.toLocaleString()}${nth(kdRank)})`;
-    }
+    const deathsFieldValue = generateStatsField(
+      env.EMOJI_DEATH,
+      'Deaths',
+      player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.deaths, 0).toLocaleString(),
+      deathsRank
+    );
 
-    let idFieldValue = `${env.EMOJI_ID} **I/D**: `;
-    idFieldValue += `\`${(player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.idr, 0) / player.servers.length).toFixed(1)}\``;
-
-    if (idRank !== null) {
-      idRank++;
-      idFieldValue += ` (${idRank.toLocaleString()}${nth(idRank)})`;
-    }
-
-    let revivesFieldValue = `${env.EMOJI_REVIVE} **Revives**: `;
-    revivesFieldValue += `\`${player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.revives, 0).toLocaleString()}\``;
-
-    if (revivesRank !== null) {
-      revivesRank++;
-      revivesFieldValue += ` (${revivesRank.toLocaleString()}${nth(revivesRank)})`;
-    }
-
-    let fallsFieldValue = `${env.EMOJI_FALL} **Falls**: `;
-    fallsFieldValue += `\`${player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.falls, 0).toLocaleString()}\``;
-
-    if (fallsRank !== null) {
-      fallsRank++;
-      fallsFieldValue += ` (${fallsRank.toLocaleString()}${nth(fallsRank)})`;
-    }
-
-    let deathsFieldValue = `${env.EMOJI_DEATH} **Deaths**: `;
-    deathsFieldValue += `\`${player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.deaths, 0).toLocaleString()}\``;
-
-    if (deathsRank !== null) {
-      deathsRank++;
-      deathsFieldValue += ` (${deathsRank.toLocaleString()}${nth(deathsRank)})`;
-    }
-
-    let tksFieldValue = `${env.EMOJI_TK} **Teamkills**: `;
-    tksFieldValue += `\`${player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.tks, 0).toLocaleString()}\``;
-
-    if (tksRank !== null) {
-      tksRank++;
-      tksFieldValue += ` (${tksRank.toLocaleString()}${nth(tksRank)})`;
-    }
+    const tksFieldValue = generateStatsField(
+      env.EMOJI_TK,
+      'Teamkills',
+      player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.tks, 0).toLocaleString(),
+      tksRank
+    );
 
     const embed = new EmbedBuilder()
       .setColor('Blurple')

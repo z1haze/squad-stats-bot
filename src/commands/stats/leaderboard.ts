@@ -9,8 +9,10 @@ import {
 
 import env from "../../util/env";
 import {redis} from "../../index";
-import {getLeaderboardPlayers} from "../../lib/leaderboard";
+import {getLeaderBoardData} from "../../lib/leaderboard";
 import {LeaderboardType} from "../../typings/player";
+
+const config = require('../../config.json');
 
 export default {
   data: new SlashCommandBuilder()
@@ -30,13 +32,18 @@ export default {
         )),
 
   execute: async (interaction: ChatInputCommandInteraction) => {
+    // immediately defer the reply
     await interaction.deferReply({ephemeral: true});
 
     const type = (interaction.options.getString('type') || 'rating') as LeaderboardType;
+    const playerCount = await redis.hlen('players');
+    const pageCount = Math.ceil(playerCount / env.LEADERBOARD_PAGE_SIZE);
 
+    // page always begins at 1
     let page = 1;
 
-    const {embed, row} = await getData(page, type);
+    const embed = await getEmbed(page, type);
+    const row = await getButtonRow(page, pageCount);
 
     // the initial followup message
     const message = await interaction.followUp({
@@ -58,7 +65,11 @@ export default {
         page++;
       }
 
-      const {embed, row} = await getData(page, type);
+      const playerCount = await redis.hlen('players');
+      const pageCount = Math.ceil(playerCount / env.LEADERBOARD_PAGE_SIZE);
+
+      const embed = await getEmbed(page, type);
+      const row = getButtonRow(page, pageCount);
 
       await i.update({embeds: [embed], components: [row]});
     });
@@ -66,41 +77,13 @@ export default {
 };
 
 /**
- * Helper function to get embed page data
+ * Get the leaderboard title text depending on the leaderboard type
  *
- * @param page
  * @param type
  */
-async function getData(page: number, type: LeaderboardType) {
-  const playerCount = await redis.hlen('players');
-  const pageCount = Math.ceil(playerCount / env.LEADERBOARD_PAGE_SIZE);
-
-  const embed = await getEmbed(page, type);
-  const row = getButtonRow(page, pageCount);
-
-  return {
-    embed,
-    row
-  };
-}
-
 function getLeaderboardTitle(type: LeaderboardType) {
-  if (type === 'rating') {
-    return 'Top Rated Players';
-  } else if (type === 'kills') {
-    return 'Top Shooters';
-  } else if (type === 'downs') {
-    return 'Top Incapacitators';
-  } else if (type === 'revives') {
-    return 'Top Medics';
-  } else if (type === 'tks') {
-    return 'Top Blue Falcons';
-  } else if (type === 'matchCount') {
-    return 'Most Matches Played';
-  } else if (type === 'kdr') {
-    return 'Top Kill/Death Ratio';
-  } else if (type === 'deaths') {
-    return 'Top Bullet Sponges';
+  if (type in config.leaderboardTitleMap) {
+    return config.leaderboardTitleMap[type];
   }
 
   return `Top ${type.charAt(0).toUpperCase() + type.slice(1)}`;
@@ -118,7 +101,7 @@ async function getEmbed(page: number, type: LeaderboardType) {
 
   embed.setTitle(getLeaderboardTitle(type));
 
-  const {namesFieldData, scoreFieldData} = await getLeaderboardPlayers(page, type);
+  const {namesFieldData, scoreFieldData} = await getLeaderBoardData(page, type);
 
   embed.addFields(
     {name: 'Player', value: namesFieldData.join('\n'), inline: true},

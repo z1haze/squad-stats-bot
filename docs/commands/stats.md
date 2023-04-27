@@ -14,10 +14,7 @@ It is likely no secret at this point that Squad does not provide any reasonable 
 Our system utilizes SquadJS and the DBLog plugin to collect our metrics. Listed below are the metrics that this bot
 currently tracks.
 
-```bash
-Rank on kills
-Rank on revives
-
+```text
 Kills
 Deaths
 K/D

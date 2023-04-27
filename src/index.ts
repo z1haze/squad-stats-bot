@@ -1,5 +1,4 @@
 import env from "./util/env";
-
 import Redis from "ioredis";
 import {
   ApplicationCommandDataResolvable,
@@ -9,9 +8,9 @@ import {
   GatewayIntentBits
 } from "discord.js";
 
-import {glob} from 'glob';
+import {glob} from "glob";
 import {importFile} from "./util/helpers";
-import {Command} from './typings/commands'
+import {Command} from "./typings/commands";
 
 export const redis = new Redis({
   host: env.REDIS_HOST,
@@ -24,20 +23,9 @@ export const commands: Collection<string, Command> = new Collection();
 
 (async () => {
   const commandFiles = await glob(`${__dirname}/commands/*/*{.ts,.js}`, {windowsPathsNoEscape: true});
-
-  const slashCommands: ApplicationCommandDataResolvable[] = await Promise.all(
-    commandFiles.map(async (filePath) => {
-      const command = await importFile(filePath);
-
-      if (!command?.data.name) return;
-
-      commands.set(command.data.name, command);
-
-      return command.data;
-    })
-  );
-
   const eventFiles = await glob(`${__dirname}/events/*{.ts,.js}`, {windowsPathsNoEscape: true});
+
+  const slashCommands: ApplicationCommandDataResolvable[] = await getCommands(commandFiles);
 
   eventFiles.map(async (filePath) => {
     const event = await importFile(filePath);
@@ -61,3 +49,17 @@ export const commands: Collection<string, Command> = new Collection();
 
   await client.login(env.BOT_TOKEN);
 })();
+
+async function getCommands(commandFiles: string[]) {
+  return Promise.all(
+    commandFiles.map(async (filePath) => {
+      const command = await importFile(filePath);
+
+      if (!command?.data.name) return;
+
+      commands.set(command.data.name, command);
+
+      return command.data;
+    })
+  );
+}
