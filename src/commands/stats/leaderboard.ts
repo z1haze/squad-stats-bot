@@ -23,9 +23,11 @@ export default {
         .setDescription('View a different leaderboard')
         .addChoices(
           {name: 'Deaths', value: 'deaths'},
+          {name: 'Death Efficiency', value: 'de'},
           {name: 'Incapacitations', value: 'downs'},
           {name: 'K/D', value: 'kdr'},
           {name: 'Kills', value: 'kills'},
+          {name: 'Kill Efficiency', value: 'ke'},
           {name: 'Matches Played', value: 'matchCount'},
           {name: 'Revives', value: 'revives'},
           {name: 'Teamkills', value: 'tks'}

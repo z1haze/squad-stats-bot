@@ -13,6 +13,8 @@ export interface PlayerServer {
   matchCount: number;
   revives: number;
   rating: number;
+  ke: number;
+  de: number;
 }
 
 /**
@@ -34,4 +36,6 @@ export type LeaderboardType =
   | "tks"
   | "tkd"
   | "matchCount"
-  | "kdr";
+  | "kdr"
+  | "de"
+  | "ke";
