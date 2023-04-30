@@ -19,7 +19,14 @@ export async function getLeaderBoardData(page: number, type: LeaderboardType) {
   const start = page * env.LEADERBOARD_PAGE_SIZE - env.LEADERBOARD_PAGE_SIZE;
   const stop = start + env.LEADERBOARD_PAGE_SIZE - 1;
 
-  const results = await redis.zrevrange(`leaderboard:${type}`, start, stop);
+  let results;
+
+  // TODO: find a way to not have this conditional
+  if (type === 'ke' || type === 'de') {
+    results = await redis.zrange(`leaderboard:${type}`, start, stop);
+  } else {
+    results = await redis.zrevrange(`leaderboard:${type}`, start, stop);
+  }
 
   const pipeline = redis.pipeline();
 
@@ -36,8 +43,24 @@ export async function getLeaderBoardData(page: number, type: LeaderboardType) {
 
           const player: Player = JSON.parse(result as string);
 
+          // TODO: don't love this hardcoding
+          let fixed;
+
+          switch (type) {
+            case 'rating':
+            case 'kdr':
+              fixed = 1;
+              break;
+            case 'ke':
+            case 'de':
+              fixed = 2;
+              break;
+            default:
+              fixed = 0;
+          }
+
           namesFieldData.push(`${start + counter + 1}) ${truncate(player.name, 26)}`);
-          scoreFieldData.push((player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr[type], 0) / player.servers.length).toFixed((type === 'rating' || type === 'kdr') ? 1 : 0));
+          scoreFieldData.push((player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr[type], 0) / player.servers.length).toFixed(fixed));
         });
       }
 
