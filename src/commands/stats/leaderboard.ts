@@ -47,11 +47,17 @@ export default {
     const embed = await getEmbed(page, type);
     const row = await getButtonRow(page, pageCount);
 
+    const components = [];
+
+    if (!embed.data.description) {
+      components.push(row);
+    }
+
     // the initial followup message
     const message = await interaction.followUp({
       ephemeral: true,
       embeds: [embed],
-      components: [row],
+      components,
       fetchReply: true
     });
 
@@ -105,10 +111,14 @@ async function getEmbed(page: number, type: LeaderboardType) {
 
   const {namesFieldData, scoreFieldData} = await getLeaderBoardData(page, type);
 
-  embed.addFields(
-    {name: 'Player', value: namesFieldData.join('\n'), inline: true},
-    {name: `${type.charAt(0).toUpperCase() + type.slice(1)}`, value: scoreFieldData.join('\n'), inline: true},
-  );
+  if (namesFieldData.length === 0) {
+    embed.setDescription('No data to display');
+  } else {
+    embed.addFields(
+      {name: 'Player', value: namesFieldData.join('\n'), inline: true},
+      {name: `${type.charAt(0).toUpperCase() + type.slice(1)}`, value: scoreFieldData.join('\n'), inline: true},
+    );
+  }
 
   return embed;
 }
