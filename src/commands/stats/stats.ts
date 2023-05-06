@@ -156,7 +156,7 @@ export default {
 
     const downsFieldValue = generateStatsField(
       env.EMOJI_DOWN,
-      'Downs',
+      'Incaps',
       player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.downs, 0).toLocaleString(),
       downsRank
     );
