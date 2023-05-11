@@ -22,7 +22,7 @@ export async function getLeaderBoardData(page: number, type: LeaderboardType) {
   let results;
 
   // TODO: find a way to not have this conditional
-  if (type === 'ke' || type === 'de') {
+  if (type === 'de') {
     results = await redis.zrange(`leaderboard:${type}`, start, stop);
   } else {
     results = await redis.zrevrange(`leaderboard:${type}`, start, stop);
