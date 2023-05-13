@@ -114,6 +114,7 @@ export default {
     pipeline.zrevrank('leaderboard:deaths', player.steamId);
     pipeline.zrevrank('leaderboard:revives', player.steamId);
     pipeline.zrevrank('leaderboard:tks', player.steamId);
+    pipeline.zrevrank('leaderboard:tkd', player.steamId);
     pipeline.zrevrank('leaderboard:rating', player.steamId);
     pipeline.zrevrank('leaderboard:kdr', player.steamId);
     pipeline.zrevrank('leaderboard:idr', player.steamId);
@@ -126,6 +127,7 @@ export default {
       deathsRank,
       revivesRank,
       tksRank,
+      tkdRank,
       overallRank,
       kdRank,
       idRank,
@@ -203,6 +205,13 @@ export default {
       tksRank
     );
 
+    const tkdFieldValue = generateStatsField(
+        env.EMOJI_TK,
+        'Teamkilled',
+        player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.tkd, 0).toLocaleString(),
+        tkdRank
+    );
+
     const embed = new EmbedBuilder()
       .setColor('Blurple')
       .setTitle(`${player.name}'s stats`)
@@ -229,7 +238,7 @@ export default {
         },
         {
           name: " ",
-          value: `${fallsFieldValue}\n${deathsFieldValue}\n${tksFieldValue}`
+          value: `${fallsFieldValue}\n${deathsFieldValue}\n${tksFieldValue}\n${tkdFieldValue}`
         }
       );
 
