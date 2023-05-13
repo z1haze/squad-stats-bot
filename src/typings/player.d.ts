@@ -12,6 +12,7 @@ export interface PlayerServer {
   idr: number;
   matchCount: number;
   revives: number;
+  revived: number;
   rating: number;
   ke: number;
   de: number;

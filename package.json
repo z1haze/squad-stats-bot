@@ -1,6 +1,6 @@
 {
   "name": "tt-squad-bot",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "description": "A Discord bot for displaying Squad stats on TT",
   "main": "dist/index.js",
   "scripts": {

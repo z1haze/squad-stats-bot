@@ -96,6 +96,7 @@ export default {
     pipeline.zrevrank('leaderboard:falls', player.steamId);
     pipeline.zrevrank('leaderboard:deaths', player.steamId);
     pipeline.zrevrank('leaderboard:revives', player.steamId);
+    pipeline.zrevrank('leaderboard:revived', player.steamId);
     pipeline.zrevrank('leaderboard:tks', player.steamId);
     pipeline.zrevrank('leaderboard:tkd', player.steamId);
     pipeline.zrevrank('leaderboard:rating', player.steamId);
@@ -109,6 +110,7 @@ export default {
       fallsRank,
       deathsRank,
       revivesRank,
+      revivedRank,
       tksRank,
       tkdRank,
       overallRank,
@@ -167,6 +169,13 @@ export default {
       revivesRank
     );
 
+    const revivedFieldValue = generateStatsField(
+      env.EMOJI_REVIVE,
+      'Revived',
+      player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.revived, 0).toLocaleString(),
+      revivedRank
+    );
+
     const fallsFieldValue = generateStatsField(
       env.EMOJI_FALL,
       'Falls',
@@ -217,7 +226,7 @@ export default {
         },
         {
           name: " ",
-          value: `${revivesFieldValue}`
+          value: `${revivesFieldValue}\n${revivedFieldValue}`
         },
         {
           name: " ",
