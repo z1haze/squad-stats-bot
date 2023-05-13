@@ -2,6 +2,7 @@ import env from "./util/env";
 import Redis from "ioredis";
 import {
   ApplicationCommandDataResolvable,
+  ApplicationCommandOptionChoiceData,
   Client,
   Collection,
   Events,
@@ -17,6 +18,12 @@ export const redis = new Redis({
   port: env.REDIS_PORT,
   password: env.REDIS_PASS
 });
+
+export const lookupCache = new Map<string, ApplicationCommandOptionChoiceData[]>();
+
+setInterval(() => {
+  lookupCache.clear();
+}, 1000 * 60 * 60);
 
 export const client = new Client({intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages]});
 export const commands: Collection<string, Command> = new Collection();

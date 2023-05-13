@@ -8,16 +8,10 @@ import {
 
 import env from '../../util/env';
 import {redis} from "../../index";
-import {getCaseInsensitiveGlobPattern, nth, generateStatsField} from "../../util/helpers";
+import {lookupCache} from "../../index";
+import {getCaseInsensitiveGlobPattern, generateStatsField} from "../../util/helpers";
 import {Player, PlayerServer} from "../../typings/player";
 import {getSteamAvatarUrl} from "../../lib/stats";
-
-const lookupCache = new Map<string, ApplicationCommandOptionChoiceData[]>();
-
-// clear the cache every hour
-setInterval(() => {
-  lookupCache.clear();
-}, 1000 * 60 * 60);
 
 /**
  * Show an individual player's squad stats
@@ -65,7 +59,7 @@ export default {
           suggestions.push({name: data[0], value: data[1]});
         }
 
-        if (suggestions.length > 4) {
+        if (suggestions.length > 10) {
           stream.pause();
           lookupCache.set(focusedValue, suggestions);
           resolve(suggestions);
