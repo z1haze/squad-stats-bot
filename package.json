@@ -1,7 +1,7 @@
 {
   "name": "tt-squad-bot",
-  "version": "1.4.0",
-  "description": "A Discord bot to handle TT related tasks",
+  "version": "1.4.1",
+  "description": "A Discord bot for displaying Squad stats on TT",
   "main": "dist/index.js",
   "scripts": {
     "start": "ts-node src/index.ts",

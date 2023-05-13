@@ -221,7 +221,11 @@ export default {
         },
         {
           name: " ",
-          value: `${fallsFieldValue}\n${deathsFieldValue}\n${tksFieldValue}\n${tkdFieldValue}`
+          value: `${fallsFieldValue}\n${deathsFieldValue}`
+        },
+        {
+          name: " ",
+          value: `${tksFieldValue}\n${tkdFieldValue}`
         }
       );
 
