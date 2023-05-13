@@ -1,6 +1,3 @@
-import {LeaderboardType} from "../typings/player";
-import env from "./env";
-
 /**
  * Dynamically import a file from a file path
  *
@@ -8,27 +5,6 @@ import env from "./env";
  */
 export async function importFile(filePath: string) {
   return (await import(filePath))?.default;
-}
-
-/**
- * Convert a string to a case-insensitive glob pattern
- *
- * @param str
- */
-export function getCaseInsensitiveGlobPattern(str: string) {
-  const escapes = ['[', ']', '*'];
-
-  return str.split('').map(c => {
-    if (/\s/.test(c)) {
-      return c;
-    }
-
-    if (escapes.indexOf(c) > -1) {
-      return `[\\${c.toLowerCase()}\\${c.toUpperCase()}]`
-    }
-
-    return `[${c.toLowerCase()}${c.toUpperCase()}]`
-  }).join('');
 }
 
 /**

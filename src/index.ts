@@ -13,6 +13,20 @@ import {glob} from "glob";
 import {importFile} from "./util/helpers";
 import {Command} from "./typings/commands";
 
+Redis.Command.setReplyTransformer('hgetall', (result) => {
+  if (Array.isArray(result)) {
+    const results = [];
+
+    for (let i = 0; i < result.length; i += 2) {
+      results.push({name: result[i], steamId: result[i + 1]});
+    }
+
+    return results;
+  }
+
+  return result;
+});
+
 export const redis = new Redis({
   host: env.REDIS_HOST,
   port: env.REDIS_PORT,

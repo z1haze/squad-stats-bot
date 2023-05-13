@@ -6,10 +6,12 @@ import {
   ApplicationCommandOptionChoiceData
 } from "discord.js";
 
+import Fuse from 'fuse.js';
+
 import env from '../../util/env';
 import {redis} from "../../index";
 import {lookupCache} from "../../index";
-import {getCaseInsensitiveGlobPattern, generateStatsField} from "../../util/helpers";
+import {generateStatsField} from "../../util/helpers";
 import {Player, PlayerServer} from "../../typings/player";
 import {getSteamAvatarUrl} from "../../lib/stats";
 
@@ -40,39 +42,26 @@ export default {
       return interaction.respond([]);
     }
 
-    const suggestions: ApplicationCommandOptionChoiceData[] = await new Promise(resolve => {
+    let suggestions: ApplicationCommandOptionChoiceData[] = await new Promise(async resolve => {
       // if the cache already has results for this search string, return them
       if (lookupCache.has(focusedValue)) {
         resolve(lookupCache.get(focusedValue)!);
-        return;
       }
 
-      const suggestions: ApplicationCommandOptionChoiceData[] = [];
-      const pattern = getCaseInsensitiveGlobPattern(focusedValue);
+      // fetch all players from redis
+      const players: any = await redis.hgetall('players');
 
-      const stream = redis.hscanStream("players", {
-        match: `*${pattern}*`,
-      });
+      // perform search
+      const results = new Fuse(players, {includeScore: true, keys: ['name']})
+          .search(focusedValue)
+          .slice(0, 25)
+          .map(({item}: any) => ({name: item.name, value: item.steamId}));
 
-      stream.on('data', (data) => {
-        if (data.length) {
-          suggestions.push({name: data[0], value: data[1]});
-        }
+      if (results.length > 0) {
+        lookupCache.set(focusedValue, results);
+      }
 
-        if (suggestions.length > 10) {
-          stream.pause();
-          lookupCache.set(focusedValue, suggestions);
-          resolve(suggestions);
-        }
-      });
-
-      stream.on('end', () => {
-        if (suggestions.length > 0) {
-          lookupCache.set(focusedValue, suggestions);
-        }
-
-        resolve(suggestions);
-      });
+      resolve(results);
     });
 
     try {
