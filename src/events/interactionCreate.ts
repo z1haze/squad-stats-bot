@@ -18,8 +18,8 @@ export default {
     try {
       await call?.();
     } catch (error) {
-      console.error(`Error executing ${command.data.name}`);
-      console.error(error);
+      // console.error(`Error executing ${command.data.name}`);
+      // console.error(error);
     }
   }
 };
