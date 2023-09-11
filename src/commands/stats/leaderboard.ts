@@ -24,7 +24,7 @@ export default {
         .addChoices(
           {name: 'Deaths', value: 'deaths'},
           {name: 'Death Efficiency', value: 'de'},
-          {name: 'Incapacitations', value: 'downs'},
+          {name: 'Incapacitations', value: 'incaps'},
           {name: 'K/D', value: 'kdr'},
           {name: 'Kills', value: 'kills'},
           {name: 'Kill Efficiency', value: 'ke'},

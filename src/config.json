@@ -2,7 +2,7 @@
   "leaderboardTitleMap": {
     "rating": "Top Rated Players",
     "kills": "Top Shooters",
-    "downs": "Top Incapacitators",
+    "incaps": "Top Incapacitators",
     "revives": "Top Healers",
     "tks": "Top Blue Falcons",
     "matchCount": "Most Addicted",

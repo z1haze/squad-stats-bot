@@ -3,7 +3,7 @@
  */
 export interface PlayerServer {
   kills: number;
-  downs: number;
+  incaps: number;
   falls: number;
   deaths: number;
   tks: number;
@@ -30,7 +30,7 @@ export type Player = {
 export type LeaderboardType =
   "rating"
   | "kills"
-  | "downs"
+  | "incaps"
   | "falls"
   | "deaths"
   | "revives"

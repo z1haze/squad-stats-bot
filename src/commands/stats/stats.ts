@@ -92,7 +92,7 @@ export default {
     const pipeline = redis.pipeline();
 
     pipeline.zrevrank('leaderboard:kills', player.steamId);
-    pipeline.zrevrank('leaderboard:downs', player.steamId);
+    pipeline.zrevrank('leaderboard:incaps', player.steamId);
     pipeline.zrevrank('leaderboard:falls', player.steamId);
     pipeline.zrevrank('leaderboard:deaths', player.steamId);
     pipeline.zrevrank('leaderboard:revives', player.steamId);
@@ -106,7 +106,7 @@ export default {
 
     let [
       killsRank,
-      downsRank,
+      incapsRank,
       fallsRank,
       deathsRank,
       revivesRank,
@@ -141,11 +141,11 @@ export default {
       killsRank
     );
 
-    const downsFieldValue = generateStatsField(
+    const incapsFieldValue = generateStatsField(
       env.EMOJI_DOWN,
       'Incaps',
-      player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.downs, 0).toLocaleString(),
-      downsRank
+      player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.incaps, 0).toLocaleString(),
+      incapsRank
     );
 
     const kdFieldValue = generateStatsField(
@@ -216,7 +216,7 @@ export default {
         },
         {
           name: " ",
-          value: `${killsFieldValue}\n${downsFieldValue}`,
+          value: `${killsFieldValue}\n${incapsFieldValue}`,
           inline: true
         },
         {
