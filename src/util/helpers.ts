@@ -1,3 +1,5 @@
+import env from './env';
+
 /**
  * Dynamically import a file from a file path
  *
@@ -40,4 +42,14 @@ export function generateStatsField(emoji: string, title: string, value: string, 
   }
 
   return content;
+}
+
+export const serverOptions = env.SERVER_IDS.map(id => {
+  const label = env.SERVER_LABELS[env.SERVER_IDS.indexOf(id)] ?? `Server ${id}`;
+
+  return {name: label, value: id.toString()};
+});
+
+export function getServerLabel(serverId: string) {
+  return serverOptions.find(option => option.value === serverId)?.name ?? `Server ${serverId}`;
 }

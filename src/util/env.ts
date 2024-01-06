@@ -1,5 +1,7 @@
 require('dotenv').config();
 
+const SERVER_IDS = process.env.SERVER_IDS ? process.env.SERVER_IDS.split(',').map(x => +x) : [1]
+
 export default {
   BOT_TOKEN: process.env.BOT_TOKEN || '',
   GUILD_ID: process.env.GUILD_ID || '',
@@ -17,5 +19,7 @@ export default {
   EMOJI_KD: process.env.EMOJI_KD || '',
   EMOJI_ID: process.env.EMOJI_ID || '',
   EMOJI_MATCHES: process.env.EMOJI_MATCHES || '',
+  SERVER_IDS,
+  SERVER_LABELS: process.env.SERVER_LABELS ? process.env.SERVER_LABELS.split(',') : SERVER_IDS.map(x => `Server ${x}`),
   STEAM_API_KEY: process.env.STEAM_API_KEY || 'XXXXXXXXXXXXXXXXXXXXXXX'
 }

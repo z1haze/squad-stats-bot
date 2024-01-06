@@ -5,14 +5,15 @@ import {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle
-} from "discord.js";
+} from 'discord.js';
 
-import env from "../../util/env";
-import {redis} from "../../index";
-import {getLeaderBoardData} from "../../lib/leaderboard";
-import {LeaderboardType} from "../../typings/player";
+import env from '../../util/env';
+import { redis } from '../../index';
+import { getLeaderBoardData } from '../../lib/leaderboard';
+import { LeaderboardType } from '../../typings/player';
 
 import * as config from '../../config.json';
+import { getServerLabel, serverOptions } from '../../util/helpers';
 
 export default {
   data: new SlashCommandBuilder()
@@ -31,21 +32,28 @@ export default {
           {name: 'Matches Played', value: 'matchCount'},
           {name: 'Revives', value: 'revives'},
           {name: 'Teamkills', value: 'tks'}
-        )),
+        )
+    )
+    .addStringOption(option =>
+      option.setName('server')
+        .setDescription('The server ID')
+        .addChoices(...serverOptions)
+    ),
 
   execute: async (interaction: ChatInputCommandInteraction) => {
     // immediately defer the reply
     await interaction.deferReply({ephemeral: true});
 
     const type = (interaction.options.getString('type') || 'rating') as LeaderboardType;
+    const serverId = interaction.options.getString('server') || env.SERVER_IDS[0].toString()
     const playerCount = await redis.hlen('players');
     const pageCount = Math.ceil(playerCount / env.LEADERBOARD_PAGE_SIZE);
 
     // page always begins at 1
     let page = 1;
 
-    const embed = await getEmbed(page, type);
-    const row = await getButtonRow(page, pageCount);
+    const embed = await getEmbed(page, type, serverId);
+    const row = getButtonRow(page, pageCount);
 
     const components = [];
 
@@ -76,7 +84,7 @@ export default {
       const playerCount = await redis.hlen('players');
       const pageCount = Math.ceil(playerCount / env.LEADERBOARD_PAGE_SIZE);
 
-      const embed = await getEmbed(page, type);
+      const embed = await getEmbed(page, type, serverId);
       const row = getButtonRow(page, pageCount);
 
       await i.update({embeds: [embed], components: [row]});
@@ -102,21 +110,22 @@ function getLeaderboardTitle(type: LeaderboardType) {
  *
  * @param page
  * @param type
+ * @param serverId
  */
-async function getEmbed(page: number, type: LeaderboardType) {
+async function getEmbed(page: number, type: LeaderboardType, serverId: string) {
   const embed = new EmbedBuilder()
     .setColor('Blurple');
 
-  embed.setTitle(getLeaderboardTitle(type));
+  embed.setTitle(getLeaderboardTitle(type) + ` on (${getServerLabel(serverId)})`);
 
-  const {namesFieldData, scoreFieldData} = await getLeaderBoardData(page, type);
+  const {namesFieldData, scoreFieldData} = await getLeaderBoardData(page, type, serverId);
 
   if (namesFieldData.length === 0) {
     embed.setDescription('No data to display');
   } else {
     embed.addFields(
       {name: 'Player', value: namesFieldData.join('\n'), inline: true},
-      {name: `${type.charAt(0).toUpperCase() + type.slice(1)}`, value: scoreFieldData.join('\n'), inline: true},
+      {name: `${type.charAt(0).toUpperCase() + type.slice(1)}`, value: scoreFieldData.join('\n'), inline: true}
     );
   }
 

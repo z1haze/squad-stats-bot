@@ -11,7 +11,7 @@ import Fuse from 'fuse.js';
 import env from '../../util/env';
 import {redis} from "../../index";
 import {lookupCache} from "../../index";
-import {generateStatsField} from "../../util/helpers";
+import { generateStatsField, getServerLabel, serverOptions } from '../../util/helpers';
 import {Player, PlayerServer} from "../../typings/player";
 import {getSteamAvatarUrl} from "../../lib/stats";
 
@@ -26,14 +26,21 @@ export default {
       option.setName('target')
         .setDescription('A player\'s name or their Steam ID')
         .setAutocomplete(true)
-        .setRequired(true))
+        .setRequired(true)
+    )
     .addStringOption(option =>
       option.setName('visibility')
         .setDescription('If set to to private, response will be sent only to the command sender')
         .addChoices(
           {name: 'Public', value: 'public'},
           {name: 'Private', value: 'private'}
-        )),
+        )
+    )
+    .addStringOption(option =>
+      option.setName('server')
+        .setDescription('The server ID')
+        .addChoices(...serverOptions)
+    ),
 
   autocomplete: async (interaction: AutocompleteInteraction) => {
     const focusedValue = interaction.options.getFocused();
@@ -89,20 +96,21 @@ export default {
     }
 
     const player: Player = JSON.parse(targetResult);
+    const serverId = interaction.options.getNumber('server') || env.SERVER_IDS[0];
     const pipeline = redis.pipeline();
 
-    pipeline.zrevrank('leaderboard:kills', player.steamId);
-    pipeline.zrevrank('leaderboard:incaps', player.steamId);
-    pipeline.zrevrank('leaderboard:falls', player.steamId);
-    pipeline.zrevrank('leaderboard:deaths', player.steamId);
-    pipeline.zrevrank('leaderboard:revives', player.steamId);
-    pipeline.zrevrank('leaderboard:revived', player.steamId);
-    pipeline.zrevrank('leaderboard:tks', player.steamId);
-    pipeline.zrevrank('leaderboard:tkd', player.steamId);
-    pipeline.zrevrank('leaderboard:rating', player.steamId);
-    pipeline.zrevrank('leaderboard:kdr', player.steamId);
-    pipeline.zrevrank('leaderboard:idr', player.steamId);
-    pipeline.zrevrank('leaderboard:matchCount', player.steamId);
+    pipeline.zrevrank(`leaderboard:${serverId}:kills`, player.steamId);
+    pipeline.zrevrank(`leaderboard:${serverId}:incaps`, player.steamId);
+    pipeline.zrevrank(`leaderboard:${serverId}:falls`, player.steamId);
+    pipeline.zrevrank(`leaderboard:${serverId}:deaths`, player.steamId);
+    pipeline.zrevrank(`leaderboard:${serverId}:revives`, player.steamId);
+    pipeline.zrevrank(`leaderboard:${serverId}:revived`, player.steamId);
+    pipeline.zrevrank(`leaderboard:${serverId}:tks`, player.steamId);
+    pipeline.zrevrank(`leaderboard:${serverId}:tkd`, player.steamId);
+    pipeline.zrevrank(`leaderboard:${serverId}:rating`, player.steamId);
+    pipeline.zrevrank(`leaderboard:${serverId}:kdr`, player.steamId);
+    pipeline.zrevrank(`leaderboard:${serverId}:idr`, player.steamId);
+    pipeline.zrevrank(`leaderboard:${serverId}:matchCount`, player.steamId);
 
     let [
       killsRank,
@@ -123,92 +131,92 @@ export default {
     const overallFieldValue = generateStatsField(
       env.EMOJI_RATING,
       'Overall Rating',
-      (player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.rating, 0) / player.servers.length).toFixed(0),
+      player.servers[serverId].rating.toFixed(0),
       overallRank
     );
 
     const matchesFieldValue = generateStatsField(
       env.EMOJI_MATCHES,
       'Games Played',
-      player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.matchCount, 0).toLocaleString(),
+      player.servers[serverId].matchCount.toLocaleString(),
       matchCountRank
     );
 
     const killsFieldValue = generateStatsField(
       env.EMOJI_KILL,
       'Kills',
-      player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.kills, 0).toLocaleString(),
+      player.servers[serverId].kills.toLocaleString(),
       killsRank
     );
 
     const incapsFieldValue = generateStatsField(
       env.EMOJI_DOWN,
       'Incaps',
-      player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.incaps, 0).toLocaleString(),
+      player.servers[serverId].incaps.toLocaleString(),
       incapsRank
     );
 
     const kdFieldValue = generateStatsField(
       env.EMOJI_KD,
       'K/D',
-      (player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.kdr, 0) / player.servers.length).toFixed(1),
+      player.servers[serverId].kdr.toFixed(1),
       kdRank
     );
 
     const idFieldValue = generateStatsField(
       env.EMOJI_ID,
       'I/D',
-      (player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.idr, 0) / player.servers.length).toFixed(1),
+      player.servers[serverId].idr.toFixed(1),
       idRank
     );
 
     const revivesFieldValue = generateStatsField(
       env.EMOJI_REVIVE,
       'Revives',
-      player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.revives, 0).toLocaleString(),
+      player.servers[serverId].revives.toLocaleString(),
       revivesRank
     );
 
     const revivedFieldValue = generateStatsField(
       env.EMOJI_REVIVE,
       'Revived',
-      player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.revived, 0).toLocaleString(),
+      player.servers[serverId].revived.toLocaleString(),
       revivedRank
     );
 
     const fallsFieldValue = generateStatsField(
       env.EMOJI_FALL,
       'Falls',
-      player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.falls, 0).toLocaleString(),
+      player.servers[serverId].falls.toLocaleString(),
       fallsRank
     );
 
     const deathsFieldValue = generateStatsField(
       env.EMOJI_DEATH,
       'Deaths',
-      player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.deaths, 0).toLocaleString(),
+      player.servers[serverId].deaths.toLocaleString(),
       deathsRank
     );
 
     const tksFieldValue = generateStatsField(
       env.EMOJI_TK,
       'Teamkills',
-      player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.tks, 0).toLocaleString(),
+      player.servers[serverId].tks.toLocaleString(),
       tksRank
     );
 
     const tkdFieldValue = generateStatsField(
         env.EMOJI_TK,
         'Teamkilled',
-        player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr.tkd, 0).toLocaleString(),
+        player.servers[serverId].tkd.toLocaleString(),
         tkdRank
     );
 
     const embed = new EmbedBuilder()
       .setColor('Blurple')
-      .setTitle(`${player.name}'s stats`)
+      .setTitle(`${player.name}`)
       .setURL(`https://steamcommunity.com/profiles/${target}`)
-      .setDescription(`Showing stats for ${player.name}.`)
+      .setDescription(`Showing ${player.name}'s stats on ${getServerLabel(serverId.toString())}.`)
       .addFields(
         {
           name: " ",

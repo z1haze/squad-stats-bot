@@ -8,8 +8,9 @@ import {truncate} from "../util/helpers";
  *
  * @param page
  * @param type
+ * @param serverId
  */
-export async function getLeaderBoardData(page: number, type: LeaderboardType) {
+export async function getLeaderBoardData(page: number, type: LeaderboardType, serverId: string) {
   /**
    * if page is 1, start/stop should be 0,9
    * if page is 2, start/stop should be 10,19
@@ -23,9 +24,9 @@ export async function getLeaderBoardData(page: number, type: LeaderboardType) {
 
   // TODO: find a way to not have this conditional
   if (type === 'de') {
-    results = await redis.zrange(`leaderboard:${type}`, start, stop);
+    results = await redis.zrange(`leaderboard:${serverId}:${type}`, start, stop);
   } else {
-    results = await redis.zrevrange(`leaderboard:${type}`, start, stop);
+    results = await redis.zrevrange(`leaderboard:${serverId}:${type}`, start, stop);
   }
 
   const pipeline = redis.pipeline();
