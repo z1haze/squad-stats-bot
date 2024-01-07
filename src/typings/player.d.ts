@@ -2,6 +2,7 @@
  * A server which holds a player's stats
  */
 export interface PlayerServer {
+  id: number;
   kills: number;
   incaps: number;
   falls: number;

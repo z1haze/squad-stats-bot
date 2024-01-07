@@ -85,8 +85,9 @@ export default {
     });
 
     let target = interaction.options.getString('target')!;
+    const serverId = interaction.options.getNumber('server') || env.SERVER_IDS[0];
 
-    const targetResult = await redis.hget('stats', target);
+    const targetResult = await redis.hget(`stats:${serverId}`, target);
 
     if (!targetResult) {
       return interaction.followUp({
@@ -96,7 +97,6 @@ export default {
     }
 
     const player: Player = JSON.parse(targetResult);
-    const serverId = interaction.options.getNumber('server') || env.SERVER_IDS[0];
     const pipeline = redis.pipeline();
 
     pipeline.zrevrank(`leaderboard:${serverId}:kills`, player.steamId);
@@ -128,87 +128,96 @@ export default {
     ] = (await pipeline.exec())
       ?.map((result) => result[1] as number)!;
 
+    const playerServer = player.servers.find((server: PlayerServer) => server.id === serverId);
+
+    if (!playerServer) {
+      return interaction.followUp({
+        ephemeral: true,
+        content: `It looks like you have not played on server ${serverId}.`
+      });
+    }
+
     const overallFieldValue = generateStatsField(
       env.EMOJI_RATING,
       'Overall Rating',
-      player.servers[serverId].rating.toFixed(0),
+      playerServer.rating.toFixed(0),
       overallRank
     );
 
     const matchesFieldValue = generateStatsField(
       env.EMOJI_MATCHES,
       'Games Played',
-      player.servers[serverId].matchCount.toLocaleString(),
+      playerServer.matchCount.toLocaleString(),
       matchCountRank
     );
 
     const killsFieldValue = generateStatsField(
       env.EMOJI_KILL,
       'Kills',
-      player.servers[serverId].kills.toLocaleString(),
+      playerServer.kills.toLocaleString(),
       killsRank
     );
 
     const incapsFieldValue = generateStatsField(
       env.EMOJI_DOWN,
       'Incaps',
-      player.servers[serverId].incaps.toLocaleString(),
+      playerServer.incaps.toLocaleString(),
       incapsRank
     );
 
     const kdFieldValue = generateStatsField(
       env.EMOJI_KD,
       'K/D',
-      player.servers[serverId].kdr.toFixed(1),
+      playerServer.kdr.toFixed(1),
       kdRank
     );
 
     const idFieldValue = generateStatsField(
       env.EMOJI_ID,
       'I/D',
-      player.servers[serverId].idr.toFixed(1),
+      playerServer.idr.toFixed(1),
       idRank
     );
 
     const revivesFieldValue = generateStatsField(
       env.EMOJI_REVIVE,
       'Revives',
-      player.servers[serverId].revives.toLocaleString(),
+      playerServer.revives.toLocaleString(),
       revivesRank
     );
 
     const revivedFieldValue = generateStatsField(
       env.EMOJI_REVIVE,
       'Revived',
-      player.servers[serverId].revived.toLocaleString(),
+      playerServer.revived.toLocaleString(),
       revivedRank
     );
 
     const fallsFieldValue = generateStatsField(
       env.EMOJI_FALL,
       'Falls',
-      player.servers[serverId].falls.toLocaleString(),
+      playerServer.falls.toLocaleString(),
       fallsRank
     );
 
     const deathsFieldValue = generateStatsField(
       env.EMOJI_DEATH,
       'Deaths',
-      player.servers[serverId].deaths.toLocaleString(),
+      playerServer.deaths.toLocaleString(),
       deathsRank
     );
 
     const tksFieldValue = generateStatsField(
       env.EMOJI_TK,
       'Teamkills',
-      player.servers[serverId].tks.toLocaleString(),
+      playerServer.tks.toLocaleString(),
       tksRank
     );
 
     const tkdFieldValue = generateStatsField(
         env.EMOJI_TK,
         'Teamkilled',
-        player.servers[serverId].tkd.toLocaleString(),
+        playerServer.tkd.toLocaleString(),
         tkdRank
     );
 

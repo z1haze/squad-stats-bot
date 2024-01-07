@@ -31,7 +31,7 @@ export async function getLeaderBoardData(page: number, type: LeaderboardType, se
 
   const pipeline = redis.pipeline();
 
-  results.forEach((steamId) => pipeline.hget('stats', steamId));
+  results.forEach((steamId) => pipeline.hget(`stats:${serverId}`, steamId));
 
   return pipeline.exec()
     .then(results => {
