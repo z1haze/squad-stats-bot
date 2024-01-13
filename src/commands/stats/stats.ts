@@ -77,7 +77,6 @@ export default {
       // if the cache already has results for this search string, return them
       if (lookupCache.has(focusedValue)) {
         resolve(lookupCache.get(focusedValue)!);
-        console.log('kept going');
       }
 
       // fetch all players from local cache
