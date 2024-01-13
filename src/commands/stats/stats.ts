@@ -16,9 +16,28 @@ import {getSteamAvatarUrl} from "../../lib/stats";
 
 export const lookupCache = new Map<string, ApplicationCommandOptionChoiceData[]>();
 
-setInterval(() => {
-  lookupCache.clear();
-}, 1000 * 60 * 60);
+// clear the lookup cache 30 minutes
+setInterval(() => lookupCache.clear(), 1000 * 60 * 30);
+
+export const playerCache = new Map<string, string>();
+
+async function cachePlayers() {
+  const players= await redis.hgetall('players');
+
+  if (Array.isArray(players)) {
+    for (const player of players) {
+      playerCache.set(player.steamId, player.name);
+    }
+  }
+
+  console.log('Player cache updated.');
+}
+
+// cache players on startup
+(() => cachePlayers())();
+
+// cache players every 30 minutes
+setInterval(cachePlayers, 1000 * 60 * 30);
 
 /**
  * Show an individual player's squad stats
@@ -61,8 +80,8 @@ export default {
         console.log('kept going');
       }
 
-      // fetch all players from redis
-      const players: any = await redis.hgetall('players');
+      // fetch all players from local cache
+      const players = Array.from(playerCache).map(([steamId, name]) => ({steamId, name}));
 
       // perform search
       const results = new Fuse(players, {includeScore: true, keys: ['name']})
