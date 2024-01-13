@@ -10,10 +10,15 @@ import Fuse from 'fuse.js';
 
 import env from '../../util/env';
 import {redis} from "../../index";
-import {lookupCache} from "../../index";
 import { generateStatsField, getServerLabel, serverOptions } from '../../util/helpers';
 import {Player, PlayerServer} from "../../typings/player";
 import {getSteamAvatarUrl} from "../../lib/stats";
+
+export const lookupCache = new Map<string, ApplicationCommandOptionChoiceData[]>();
+
+setInterval(() => {
+  lookupCache.clear();
+}, 1000 * 60 * 60);
 
 /**
  * Show an individual player's squad stats
@@ -53,6 +58,7 @@ export default {
       // if the cache already has results for this search string, return them
       if (lookupCache.has(focusedValue)) {
         resolve(lookupCache.get(focusedValue)!);
+        console.log('kept going');
       }
 
       // fetch all players from redis

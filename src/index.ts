@@ -1,17 +1,10 @@
-import env from "./util/env";
-import Redis from "ioredis";
-import {
-  ApplicationCommandDataResolvable,
-  ApplicationCommandOptionChoiceData,
-  Client,
-  Collection,
-  Events,
-  GatewayIntentBits
-} from "discord.js";
+import env from './util/env';
+import Redis from 'ioredis';
+import { ApplicationCommandDataResolvable, Client, Collection, Events, GatewayIntentBits } from 'discord.js';
 
-import {glob} from "glob";
-import {importFile} from "./util/helpers";
-import {Command} from "./typings/commands";
+import { glob } from 'glob';
+import { importFile } from './util/helpers';
+import { Command } from './typings/commands';
 
 Redis.Command.setReplyTransformer('hgetall', (result) => {
   if (Array.isArray(result)) {
@@ -32,12 +25,6 @@ export const redis = new Redis({
   port: env.REDIS_PORT,
   password: env.REDIS_PASS
 });
-
-export const lookupCache = new Map<string, ApplicationCommandOptionChoiceData[]>();
-
-setInterval(() => {
-  lookupCache.clear();
-}, 1000 * 60 * 60);
 
 export const client = new Client({intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages]});
 export const commands: Collection<string, Command> = new Collection();
