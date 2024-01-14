@@ -4,40 +4,40 @@ import {
   EmbedBuilder,
   AutocompleteInteraction,
   ApplicationCommandOptionChoiceData
-} from "discord.js";
+} from 'discord.js';
 
 import Fuse from 'fuse.js';
 
 import env from '../../util/env';
-import {redis} from "../../index";
+import { redis } from '../../index';
 import { generateStatsField, getServerLabel, serverOptions } from '../../util/helpers';
-import {Player, PlayerServer} from "../../typings/player";
-import {getSteamAvatarUrl} from "../../lib/stats";
-
-export const lookupCache = new Map<string, ApplicationCommandOptionChoiceData[]>();
-
-// clear the lookup cache 30 minutes
-setInterval(() => lookupCache.clear(), 1000 * 60 * 30);
+import { Player, PlayerServer } from '../../typings/player';
+import { getSteamAvatarUrl } from '../../lib/stats';
 
 export const playerCache = new Map<string, string>();
 
-async function cachePlayers() {
-  const players= await redis.hgetall('players');
+let fusedPlayers: {steamId: string, name: string}[] = [];
+const playerSearchCache = new Map<string, ApplicationCommandOptionChoiceData[]>();
 
-  if (Array.isArray(players)) {
-    for (const player of players) {
+async function updatePlayerCache() {
+  const fromRedis = await redis.hgetall('players');
+
+  if (Array.isArray(fromRedis)) {
+    for (const player of fromRedis) {
       playerCache.set(player.steamId, player.name);
     }
   }
 
-  console.log('Player cache updated.');
+  fusedPlayers = Array.from(playerCache).map(([steamId, name]) => ({steamId, name}));
+
+  console.log(`Updated player search cache. ${playerCache.size} players cached.`);
 }
 
-// cache players on startup
-(() => cachePlayers())();
+setInterval(updatePlayerCache, 1000 * 60 * 30);
 
-// cache players every 30 minutes
-setInterval(cachePlayers, 1000 * 60 * 30);
+(() => {
+  updatePlayerCache();
+})();
 
 /**
  * Show an individual player's squad stats
@@ -60,7 +60,7 @@ export default {
           {name: 'Private', value: 'private'}
         )
     )
-    .addStringOption(option =>
+    .addIntegerOption(option =>
       option.setName('server')
         .setDescription('The server ID')
         .addChoices(...serverOptions)
@@ -75,21 +75,18 @@ export default {
 
     let suggestions: ApplicationCommandOptionChoiceData[] = await new Promise(async resolve => {
       // if the cache already has results for this search string, return them
-      if (lookupCache.has(focusedValue)) {
-        resolve(lookupCache.get(focusedValue)!);
+      if (playerSearchCache.has(focusedValue)) {
+        resolve(playerSearchCache.get(focusedValue)!);
       }
 
-      // fetch all players from local cache
-      const players = Array.from(playerCache).map(([steamId, name]) => ({steamId, name}));
-
       // perform search
-      const results = new Fuse(players, {includeScore: true, keys: ['name']})
-          .search(focusedValue)
-          .slice(0, 25)
-          .map(({item}: any) => ({name: item.name, value: item.steamId}));
+      const results = new Fuse(fusedPlayers, {includeScore: true, keys: ['name']})
+        .search(focusedValue)
+        .slice(0, 25)
+        .map(({item}: any) => ({name: item.name, value: item.steamId}));
 
       if (results.length > 0) {
-        lookupCache.set(focusedValue, results);
+        playerSearchCache.set(focusedValue, results);
       }
 
       resolve(results);
@@ -99,7 +96,6 @@ export default {
       await interaction.respond(suggestions);
     } catch (error: any) {
       console.error(error.message);
-      console.log(JSON.stringify(suggestions));
     }
   },
 
@@ -108,8 +104,8 @@ export default {
       ephemeral: interaction.options.getString('visibility') === 'private'
     });
 
-    let target = interaction.options.getString('target')!;
-    const serverId = interaction.options.getNumber('server') || env.SERVER_IDS[0];
+    const target = interaction.options.getString('target')!;
+    const serverId = interaction.options.getInteger('server') || env.SERVER_IDS[0];
 
     const targetResult = await redis.hget(`stats:${serverId}`, target);
 
@@ -239,42 +235,42 @@ export default {
     );
 
     const tkdFieldValue = generateStatsField(
-        env.EMOJI_TK,
-        'Teamkilled',
-        playerServer.tkd.toLocaleString(),
-        tkdRank
+      env.EMOJI_TK,
+      'Teamkilled',
+      playerServer.tkd.toLocaleString(),
+      tkdRank
     );
 
     const embed = new EmbedBuilder()
       .setColor('Blurple')
       .setTitle(`${player.name}`)
       .setURL(`https://steamcommunity.com/profiles/${target}`)
-      .setDescription(`Showing ${player.name}'s stats on ${getServerLabel(serverId.toString())}.`)
+      .setDescription(`Showing ${player.name}'s stats on ${getServerLabel(serverId)}.`)
       .addFields(
         {
-          name: " ",
+          name: ' ',
           value: `${overallFieldValue}\n${matchesFieldValue}`
         },
         {
-          name: " ",
+          name: ' ',
           value: `${killsFieldValue}\n${incapsFieldValue}`,
           inline: true
         },
         {
-          name: " ",
+          name: ' ',
           value: `${kdFieldValue}\n${idFieldValue}`,
           inline: true
         },
         {
-          name: " ",
+          name: ' ',
           value: `${revivesFieldValue}\n${revivedFieldValue}`
         },
         {
-          name: " ",
+          name: ' ',
           value: `${fallsFieldValue}\n${deathsFieldValue}`
         },
         {
-          name: " ",
+          name: ' ',
           value: `${tksFieldValue}\n${tkdFieldValue}`
         }
       );

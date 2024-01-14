@@ -34,7 +34,7 @@ export default {
           {name: 'Teamkills', value: 'tks'}
         )
     )
-    .addStringOption(option =>
+    .addIntegerOption(option =>
       option.setName('server')
         .setDescription('The server ID')
         .addChoices(...serverOptions)
@@ -45,7 +45,7 @@ export default {
     await interaction.deferReply({ephemeral: true});
 
     const type = (interaction.options.getString('type') || 'rating') as LeaderboardType;
-    const serverId = interaction.options.getString('server') || env.SERVER_IDS[0].toString()
+    const serverId = interaction.options.getInteger('server') || env.SERVER_IDS[0];
     const playerCount = await redis.hlen('players');
     const pageCount = Math.ceil(playerCount / env.LEADERBOARD_PAGE_SIZE);
 
@@ -112,7 +112,7 @@ function getLeaderboardTitle(type: LeaderboardType) {
  * @param type
  * @param serverId
  */
-async function getEmbed(page: number, type: LeaderboardType, serverId: string) {
+async function getEmbed(page: number, type: LeaderboardType, serverId: number) {
   const embed = new EmbedBuilder()
     .setColor('Blurple');
 
