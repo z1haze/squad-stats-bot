@@ -1,7 +1,7 @@
-import {redis} from "../index";
-import env from "../util/env";
-import {LeaderboardType, Player, PlayerServer} from "../typings/player";
-import {truncate} from "../util/helpers";
+import { redis } from '../index';
+import env from '../util/env';
+import { LeaderboardType, Player, PlayerServer } from '../typings/player';
+import { truncate } from '../util/helpers';
 
 /**
  * get the field data for a leaderboard page
@@ -61,13 +61,20 @@ export async function getLeaderBoardData(page: number, type: LeaderboardType, se
           }
 
           namesFieldData.push(`${start + counter + 1}) ${truncate(player.name, 26)}`);
-          scoreFieldData.push((player.servers.reduce((acc: number, curr: PlayerServer) => acc + curr[type], 0) / player.servers.length).toFixed(fixed));
+
+          const playerServer = player.servers.find((server: PlayerServer) => server.id === serverId);
+
+          if (playerServer) {
+            scoreFieldData.push(playerServer[type].toFixed(fixed));
+          } else {
+            scoreFieldData.push('0');
+          }
         });
       }
 
       return {
         namesFieldData,
         scoreFieldData
-      }
+      };
     });
 }
