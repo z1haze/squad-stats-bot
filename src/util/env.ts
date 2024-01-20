@@ -21,5 +21,6 @@ export default {
   EMOJI_MATCHES: process.env.EMOJI_MATCHES || '',
   SERVER_IDS,
   SERVER_LABELS: process.env.SERVER_LABELS ? process.env.SERVER_LABELS.split(',') : SERVER_IDS.map(x => `Server ${x}`),
-  STEAM_API_KEY: process.env.STEAM_API_KEY || 'XXXXXXXXXXXXXXXXXXXXXXX'
+  STEAM_API_KEY: process.env.STEAM_API_KEY || 'XXXXXXXXXXXXXXXXXXXXXXX',
+  SENTRY_DSN: process.env.SENTRY_DSN || '',
 }

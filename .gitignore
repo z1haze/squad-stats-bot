@@ -2,3 +2,7 @@
 node_modules/
 .env
 dist/
+players.sqlite
+
+# Sentry Config File
+.sentryclirc

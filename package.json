@@ -1,6 +1,6 @@
 {
   "name": "tt-squad-bot",
-  "version": "1.5.4",
+  "version": "1.6.0",
   "description": "A Discord bot for displaying Squad stats on TT",
   "main": "dist/index.js",
   "engines": {
@@ -11,22 +11,27 @@
     "start": "ts-node src/index.ts",
     "start:dev": "ts-node-dev src/index.ts",
     "start:prod": "node dist/index.js",
-    "build": "tsc",
-    "watch": "tsc -w"
+    "build": "tsc && npm run sentry:sourcemaps",
+    "watch": "tsc -w",
+    "sentry:sourcemaps": "sentry-cli sourcemaps inject --org stephen-hendricks-llc --project tt-stats-bot ./dist && sentry-cli sourcemaps upload --org stephen-hendricks-llc --project tt-stats-bot ./dist"
   },
   "keywords": [],
   "author": "z1haze",
   "license": "ISC",
   "dependencies": {
+    "@sentry/cli": "^2.25.3",
+    "@sentry/node": "^7.94.1",
     "discord.js": "^14.14.1",
     "dotenv": "^16.3.1",
     "fuse.js": "^7.0.0",
     "glob": "^10.3.10",
-    "ioredis": "^5.3.2"
+    "ioredis": "^5.3.2",
+    "sqlite3": "^5.1.7"
   },
   "devDependencies": {
     "@types/glob": "^8.1.0",
     "@types/node": "^20.10.5",
+    "@types/sqlite3": "^3.1.11",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.2.3"

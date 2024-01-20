@@ -1,10 +1,4 @@
-import {
-  ChatInputCommandInteraction,
-  SlashCommandBuilder,
-  EmbedBuilder,
-  AutocompleteInteraction,
-  ApplicationCommandOptionChoiceData
-} from 'discord.js';
+import { ApplicationCommandOptionChoiceData, AutocompleteInteraction, ChatInputCommandInteraction, EmbedBuilder, SlashCommandBuilder } from 'discord.js';
 
 import Fuse from 'fuse.js';
 
@@ -13,10 +7,11 @@ import { redis } from '../../index';
 import { generateStatsField, getServerLabel, serverOptions } from '../../util/helpers';
 import { Player, PlayerServer } from '../../typings/player';
 import { getSteamAvatarUrl } from '../../lib/stats';
+import { lookupViaDiscord } from '../../db/db';
 
 export const playerCache = new Map<string, string>();
 
-let fusedPlayers: {steamId: string, name: string}[] = [];
+let fusedPlayers: { steamId: string, name: string }[] = [];
 const playerSearchCache = new Map<string, ApplicationCommandOptionChoiceData[]>();
 
 async function updatePlayerCache() {
@@ -50,7 +45,6 @@ export default {
       option.setName('target')
         .setDescription('A player\'s name or their Steam ID')
         .setAutocomplete(true)
-        .setRequired(true)
     )
     .addStringOption(option =>
       option.setName('visibility')
@@ -104,9 +98,22 @@ export default {
       ephemeral: interaction.options.getString('visibility') === 'private'
     });
 
-    const target = interaction.options.getString('target')!;
-    const serverId = interaction.options.getInteger('server') || env.SERVER_IDS[0];
+    let target = interaction.options.getString('target');
 
+    if (!target) {
+      const linkedUser = await lookupViaDiscord(interaction.user.id);
+
+      if (!linkedUser) {
+        return interaction.followUp({
+          ephemeral: true,
+          content: 'You must link your Steam account to use this command. Use `/link` to get started.'
+        });
+      }
+
+      target = linkedUser.steam_id;
+    }
+
+    const serverId = interaction.options.getInteger('server') || env.SERVER_IDS[0];
     const targetResult = await redis.hget(`stats:${serverId}`, target);
 
     if (!targetResult) {

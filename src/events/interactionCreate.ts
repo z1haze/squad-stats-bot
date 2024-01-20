@@ -1,25 +1,36 @@
-import {commands} from "../index";
-import {AutocompleteInteraction, ChatInputCommandInteraction, CommandInteraction, Events} from "discord.js";
+import { commands, modalHandlers } from '../index';
+import { AutocompleteInteraction, BaseInteraction, ChatInputCommandInteraction, Events } from 'discord.js';
 
 export default {
   name: Events.InteractionCreate,
-  execute: async (interaction: CommandInteraction) => {
-    if (!interaction.isChatInputCommand() && !interaction.isAutocomplete()) return;
+  execute: async (interaction: BaseInteraction) => {
+    if (interaction.isModalSubmit()) {
+      await modalHandlers.get(interaction.customId)?.(interaction);
 
-    const command = commands.get(interaction.commandName);
+      return;
+    } else {
+      if (!interaction.isChatInputCommand() && !interaction.isAutocomplete()) return;
 
-    if (!command)
-      return interaction.followUp("Invalid Command!");
+      const command = commands.get(interaction.commandName);
 
-    const call = interaction.isAutocomplete()
-      ? command?.autocomplete?.bind(undefined, interaction as AutocompleteInteraction)
-      : command.execute.bind(undefined, interaction as ChatInputCommandInteraction);
+      if (!command) {
+        if (interaction.isChatInputCommand()) {
+          await interaction.followUp('Invalid Command!');
+        }
 
-    try {
-      await call?.();
-    } catch (error) {
-      // console.error(`Error executing ${command.data.name}`);
-      // console.error(error);
+        return;
+      }
+
+      const call = interaction.isAutocomplete()
+        ? command?.autocomplete?.bind(undefined, interaction as AutocompleteInteraction)
+        : command.execute.bind(undefined, interaction as ChatInputCommandInteraction);
+
+      try {
+        await call?.();
+      } catch (error) {
+        // console.error(`Error executing ${command.data.name}`);
+        // console.error(error);
+      }
     }
   }
 };
